@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Edit Event | Campus Event Hub{% endblock %}
+
+{% block body %}
+
+<article style="max-width: 600px; margin: auto;">
+    
+    <header>
+        <h2>✏️ Edit Event</h2>
+        <p>Update your event details</p>
+    </header>
+
+    <form method="POST" action="{{ url_for('edit_event', event_id=event.id) }}">
+        <fieldset>
+
+            <label>
+                Event Title
+                <input type="text" name="title" value="{{ event.title }}" required />
+            </label>
+
+            <label>
+                Date & Time
+                <input type="datetime-local" name="date" value="{{ event.date.strftime('%Y-%m-%dT%H:%M') }}" required />
+            </label>
+
+            <label>
+                Location
+                <input type="text" name="location" value="{{ event.location }}" required />
+            </label>
+
+            <label>
+                Category
+                <select name="category" required>
+                    <option value="">Select a category</option>
+                    <option value="Academics" {% if event.category == 'Academics' %}selected{% endif %}>Academics</option>
+                    <option value="Sports" {% if event.category == 'Sports' %}selected{% endif %}>Sports</option>
+                    <option value="Social" {% if event.category == 'Social' %}selected{% endif %}>Social</option>
+                    <option value="Clubs" {% if event.category == 'Clubs' %}selected{% endif %}>Clubs</option>
+                    <option value="Workshop" {% if event.category == 'Workshop' %}selected{% endif %}>Workshop</option>
+                </select>
+            </label>
+
+            <label>
+                Description
+                <textarea name="description" rows="4" required>{{ event.description }}</textarea>
+            </label>
+
+        </fieldset>
+
+        <footer style="display: flex; gap: 1rem;">
+            <button type="submit">Update Event</button>
+            <a href="{{ url_for('event_list') }}" role="button" class="secondary">
+                Cancel
+            </a>
+        </footer>
+    </form>
+
+</article>
+
+{% endblock %}ff

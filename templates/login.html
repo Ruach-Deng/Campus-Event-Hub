@@ -1,36 +1,61 @@
+
 {% extends "base.html" %}
 
 {% block title %}Login {% endblock %}
 
 {% block body %}
 
-<h2> Login </h2>
+<main class="container">
+  <article class="grid" style="max-width: 420px; margin: 4rem auto;">
+    
+    <div>
+      <header>
+        <h2 style="margin-bottom: 0.25rem;">Welcome back</h2>
 
- <a href="{{url_for('register')}}">Dont have an account? Register here</a>
- 
-<form method="POST" action="{{url_for('login')}}" >
+        <p style="color: var(--muted-color);">
+          Sign in to your account
+        </p>
+      </header>
 
-   <fieldset class="grid">
+      <form method="POST" action="{{ url_for('login') }}">
+        <label>
+          Email
+          <input
+            type="email"
+            name="email"
+            placeholder="email"
+            autocomplete="email"
+            required
+          />
+        </label>
 
-      <input 
-        name="email"
-        placeholder="email"
-        aria-label="email"
-        autocomplete="email" />
+        <label>
+          Password
+          <input
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+        </label>
 
-      <input
-        type="password"
-         name="password"
-         placeholder="Password"
-         aria-label="Password"
-         autocomplete="current-password"/>
+        <button type="submit" class="contrast">
+          Log in
+        </button>
+        
+      </form>
 
-      <input
-         type="submit"
-        value="Log in"/>
+      <footer style="margin-top: 1rem; text-align: center;">
+        <small>
+          Don’t have an account?
+          <a href="{{ url_for('register') }}">Register here</a>
+        </small>
+      </footer>
+    </div>
 
-   </fieldset>
+  </article>
+</main>
 
-</form>
 
 {% endblock %}

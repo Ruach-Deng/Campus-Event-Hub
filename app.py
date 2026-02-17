@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for
+
+from flask import Flask, render_template, request, redirect, session, url_for
 import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -6,16 +7,9 @@ import sqlalchemy.orm as so
 import sqlalchemy as sa
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_login import LoginManager, login_required
-from flask_login import UserMixin
-# from app.models import User
-# from flask_wtf import FlaskForm
-# from wtforms import StringField, PasswordField, BooleanField, SubmitField
-# from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
-# from app.forms import RegistrationForm
-from flask_login import current_user, login_user
+from flask_login import LoginManager, login_required, UserMixin, current_user, login_user, logout_user
 from flask import flash
-from flask_login import logout_user
+from flask import get_flashed_messages
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -27,71 +21,28 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
+login.login_view = 'login'
+
 
 # Define the User model
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
+    events = db.relationship('Event', backref='author', lazy=True)
+    rsvps = db.relationship('RSVP', backref='user', lazy=True)
+    
     
     # Methods to set and check password
     def set_password(self, password):
         self.password = generate_password_hash(password)
     def check_password(self, password):
         return check_password_hash(self.password, password)
-    
-
-#Initialize the database and create the user table
-with app.app_context():
-    db.create_all()
 
 # Define a user loader function to load a user from the database based on their user ID
 @login.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-
-
-# Registration Form using Flask-WTF
-# class RegistrationForm(FlaskForm):
-#     username = StringField('Username', validators=[DataRequired()])
-#     email = StringField('Email', validators=[DataRequired(), Email()])
-#     password = PasswordField('Password', validators=[DataRequired()])
-#     password2 = PasswordField(
-#         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-#     submit = SubmitField('Register')
-
-#     def validate_username(self, username):
-#         user = db.session.scalar(sa.select(User).where(
-#             User.username == username.data))
-#         if user is not None:
-#             raise ValidationError('Please use a different username.')
-
-#     def validate_email(self, email):
-#         user = db.session.scalar(sa.select(User).where(
-#             User.email == email.data))
-#         if user is not None:
-#             raise ValidationError('Please use a different email address.')
-        
-
-# # Login Form using Flask-WTF
-# class LoginForm(FlaskForm):
-#     username = StringField("Username", validators=[DataRequired(), Length(1, 64)])
-#     password = PasswordField("Password", validators=[DataRequired()])
-#     remember_me = BooleanField("Remember me")
-#     submit = SubmitField("Sign in")
-
-
-
-# dictionary to store user and password
-#users = {
-#    'kunal@gmail.com': '1234',
-#    'user2@gmail.com': 'password2'
-#}
-
-
-# Placeholder event data (iterable)
 
 # Define the Event model
 class Event(db.Model):
@@ -101,183 +52,220 @@ class Event(db.Model):
     date: so.Mapped[datetime] = so.mapped_column(index=True, default=datetime.now)
     location: so.Mapped[str] = so.mapped_column(index=True, default="No Location")
     description: so.Mapped[str] = so.mapped_column(index=True, default="No Description")
+    category: so.Mapped[str] = so.mapped_column(index=True, default="No Category")
+    created_at:so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+    user_id :so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')    
 
-    
-# Delete these because we are using a database now
-# Placeholder event data (iterable)
-events = [
-    {
-        'title': 'Soccer Night',
-        'date': 'Oct 20, 2025',
-        'location': 'EMU Turf',
-        'description': 'Come show your soccer skills and meet new people.'
-    },
-    {
-        'title': 'Movie Night',
-        'date': 'Oct 23, 2025',
-        'location': 'University Commons',
-        'description': 'Enjoy a movie with free popcorn and snacks!'
-    }
-]
+class RSVP(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+#Initialize the database and create the user table
+with app.app_context():
+    db.create_all()
+
 
 @app.route("/")
 def home():
-    # Displays the homepage with categories and a preview of events
-   
-    return render_template("home.html", events=events)
+   # Get upcoming events (limit to 3)
+    upcoming_events = Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).limit(3).all()
+    return render_template('home.html', upcoming_events=upcoming_events)
 
-
-# Combined GET and POST handling for login
-#@app.route('/login', methods=['GET', 'POST'])
-#def login():
+# Route to display all events with optional filtering by category and search term
+@app.route('/events', methods=['GET', 'POST'])
+def event_list():
+    category = request.args.get('category')
+    search = request.args.get('search')
     
-   # if request.method == 'POST':
-       # email = request.form.get('email')
-       # password = request.form.get('password')
-        #print(email, password)
+    query = Event.query
+    
+    if category:
+        query = query.filter_by(category=category)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                Event.title.like(search_term),
+                Event.description.like(search_term),
+                Event.location.like(search_term)
+            )
+        )
+    
+    events = query.order_by(Event.date.desc()).all()
+    return render_template('events.html', events=events, category=category, search=search)
 
-       # if email in users and users[email] == password:
-        #    return '<h1>Welcome!!!</h1>'
-       # else:
-           # return '<h1>Invalid credentials!</h1>'
-    #else:
-       # return render_template('login.html')
+@app.route('/post-event', methods=['GET', 'POST'])
+@login_required
+def post_event():
+
+    if 'user_id' not in session:
+        flash('Please login to post an event', 'error')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title')
+        date_str = request.form.get('date')
+        location = request.form.get('location')
+        description = request.form.get('description')
+        category = request.form.get('category')
+        
+        # Validation
+        if not all([title, date_str, location, description, category]):
+            flash('All fields are required', 'error')
+            return redirect(url_for('post_event'))
+        
+        try:
+            event_date = datetime.fromisoformat(date_str)
+        except ValueError:
+            flash('Invalid date format', 'error')
+            return redirect(url_for('post_event'))
+        
+        new_event = Event(
+            title=title,
+            date=event_date,
+            location=location,
+            description=description,
+            category=category,
+            user_id=current_user.id
+        )
+        
+        db.session.add(new_event)
+        db.session.commit()
+        
+        flash('Event posted successfully!', 'success')
+        return redirect(url_for('event_list'))
+    
+    return render_template('post_event.html')
+
+@app.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
+def edit_event(event_id):
+    if 'user_id' not in session:
+        flash('Please login to edit events', 'error')
+        return redirect(url_for('login'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    if event.user_id != session['user_id']:
+        flash('You can only edit your own events', 'error')
+        return redirect(url_for('event_list'))
+    
+    if request.method == 'POST':
+        event.title = request.form.get('title')
+        event.date = datetime.fromisoformat(request.form.get('date'))
+        event.location = request.form.get('location')
+        event.description = request.form.get('description')
+        event.category = request.form.get('category')
+        
+        db.session.commit()
+        flash('Event updated successfully!', 'success')
+        return redirect(url_for('event_list'))
+    
+    return render_template('edit_event.html', event=event)
 
 
-# Combined GET and POST handling for login
+@app.route('/event/<int:event_id>/delete', methods=['POST'])
+def delete_event(event_id):
+    if 'user_id' not in session:
+        flash('Please login to delete events', 'error')
+        return redirect(url_for('login'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    if event.user_id != session['user_id']:
+        flash('You can only delete your own events', 'error')
+        return redirect(url_for('event_list'))
+    
+    db.session.delete(event)
+    db.session.commit()
+    
+    flash('Event deleted successfully!', 'success')
+    return redirect(url_for('event_list'))
+
+@app.route('/event/<int:event_id>/rsvp', methods=['POST'])
+def rsvp_event(event_id):
+    if 'user_id' not in session:
+        flash('Please login to RSVP', 'error')
+        return redirect(url_for('login'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Check if already RSVP'd
+    existing_rsvp = RSVP.query.filter_by(user_id=session['user_id'], event_id=event_id).first()
+    
+    if existing_rsvp:
+        flash('You have already RSVP\'d to this event', 'info')
+    else:
+        new_rsvp = RSVP(user_id=session['user_id'], event_id=event_id)
+        db.session.add(new_rsvp)
+        db.session.commit()
+        flash('RSVP successful!', 'success')
+    
+    return redirect(url_for('event_list'))
+    
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    print("Login started...")
-    if current_user.is_authenticated:
-        print("User is already authenticated")
-        return redirect(url_for('home'))
     if request.method == 'POST':
-        user = db.session.scalar(
-            sa.select(User).where(User.email == request.form.get('email')))
-        if user is None or not user.check_password(request.form.get('password')):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user)
-        return redirect(url_for('home'))
-    elif request.method == 'GET':
-        return render_template('login.html', title='Sign In')    
-   
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password, password):
+            login_user(user) 
+            session['user_id'] = user.id
+            session['user_email'] = user.email
+            flash('Login successful!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('Invalid email or password', 'error')
     
-# Combined GET and POST handling for registration
-
-# use the same for login for registration
-# add all the links to connect all the webpages together
+    return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('home'))
-    
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        # make sure fields are not empty
-        if not email or not password:
-            flash("Please fill out all fields.")
-            return redirect(url_for("register"))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
         
-         # check if email already exists
-        existing = db.session.scalar(sa.select(User).where(User.email == email))
-        if existing:
-            flash("Email already registered.")
-            return redirect(url_for("login"))
-
-        print(email, password)
-        user = User(email=email)
-        user.set_password(password)
-
-       
-       # Add the new user to the database
-        db.session.add(user)
+        # Validation
+        if not email or not password:
+            flash('Email and password are required', 'error')
+            return redirect(url_for('register'))
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters', 'error')
+            return redirect(url_for('register'))
+        
+        # Check if user exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('Email already registered', 'error')
+            return redirect(url_for('register'))
+        
+        # Create new user
+        hashed_password = generate_password_hash(password)
+        new_user = User(email=email, password=hashed_password)
+        db.session.add(new_user)
         db.session.commit()
-
-        flash('Congratulations, you are now a registered user!')
+        
+        flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
     
-    return render_template('register.html',)
+    return render_template('register.html')
 
-# Logout
-# @login_required(), to protect routes that require authentication use it for post event routes
-#  as well as managing events
-
-@app.route("/logout")
+@app.route('/logout')
+@login_required
 def logout():
     logout_user()
-    return redirect(url_for("home"))
-
-
-# Route to display all events (iterable data)
-@app.route('/events', methods=['GET', 'POST'])
-def event_list():
-    if request.method == "POST":
-        obj = Event()
-        obj.title = request.form.get('title')
-
-        # convert date string to datetime object
-        date_str = request.form.get('date')
-        obj.date = datetime.strptime(date_str, "%b %d, %Y")
-        # obj.date = request.form.get('date')
-
-        obj.location = request.form.get('location')
-        obj.description = request.form.get('description')
-        
-        db.session.add(obj)
-        #Commit chnages to end of the route
-        db.session.commit()
-        return "Form submitted successfully!"
-    
-    # redirect to events page after submission - redirect/events
-
-    elif request.method == "GET":
-        # Add the contents of the database to the events list
-        #Create a database query
-        events = db.session.scalars(sa.select(Event))
-
-        #Render the events template with the events data
-        return render_template('events.html', events=events)
-
-#Route to post a new event (form handling)
-
-@app.route('/post_event' )
-def post_event():
-    return render_template('post_event.html')
-
-
-
-#     #Create a database query
-#     query = sa.select(Event)
-#     d = db.session.scalars(query).all()
-
-#     if request.method == 'POST':
-#         title = request.form.get('title')
-#         date = request.form.get('date')
-#         location = request.form.get('location')
-#         description = request.form.get('description')
-
-#         # Append new event to list (simulating database save)
-#         events.append({
-#             'title': title,
-#             'date': date,
-#             'location': location,
-#             'description': description
-#         })
-
-#         return redirect(url_for('event_list'))
-    
-#     #Adding to the database
-#     obj = Event()
-#     db.session.add(obj)
-
-#     #Commit chnages to end of the route
-#     db.session.commit()
-
-#     return render_template('post_event.html', Event = d)
+    session.clear()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for('home'))
         
 if __name__ == '__main__':
     app.run(debug=True)

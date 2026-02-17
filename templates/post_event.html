@@ -3,15 +3,61 @@
 
 {% block body %}
 
-<h2>Post a New Event</h2>
+<main class="container">
+  <article style="max-width: 600px; margin: auto;">
+    
+    <header>
+      <h2>📢 Post a New Event</h2>
+      <p>Share your campus event with the community</p>
+    </header>
 
-<form method="POST" action="{{ url_for('event_list') }}">
-  <fieldset class="grid">
-    <input type="text" name="title" placeholder="Event Title" required />
-    <input type="text" name="date" placeholder="Date (e.g. Oct 25, 2025)" required />
-    <input type="text" name="location" placeholder="Location" required />
-    <textarea name="description" placeholder="Description" required></textarea>
-    <input type="submit" value="Add Event" />
-  </fieldset>
-</form>
+    <form method="POST" action="{{ url_for('post_event') }}">
+      <fieldset>
+
+        <label>
+          Event Title
+          <input type="text" name="title" placeholder="e.g. Spring Festival" required />
+        </label>
+
+        <label>
+          Date & Time
+          <input type="datetime-local" name="date" required />
+        </label>
+
+        <label>
+          Location
+          <input type="text" name="location" placeholder="e.g. Main Quad" required />
+        </label>
+
+        <label>
+                Category
+                <select name="category" required>
+                    <option value="">Select a category</option>
+                    <option value="Academics">Academics</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Social">Social</option>
+                    <option value="Clubs">Clubs</option>
+                    <option value="Workshop">Workshop</option>
+                </select>
+            </label>
+
+
+        <label>
+          Description
+          <textarea name="description" placeholder="Details about the event..." rows="4" required ></textarea>
+        </label>
+
+      </fieldset>
+
+      <footer style="display: flex; gap: 1rem;">
+        <button type="submit">PostEvent</button>
+        <a href="{{ url_for('event_list') }}" role="button" class="secondary">
+          Cancel
+        </a>
+      </footer>
+    </form>
+
+  </article>
+</main>
+
 {% endblock %}

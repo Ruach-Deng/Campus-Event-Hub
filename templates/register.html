@@ -2,20 +2,52 @@
 
 {% block body %}
 
-<div class="form-container">
+<main class="container">
+  <article class="auth-card">
 
-    <h1>Account Registration</h1>
+    <header>
 
-<form method="POST"  action="{{url_for('register')}}"   >
+      <h1>Create an account </h1>
 
-    <input name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
+    </header>
 
-    <button type="submit">Register</button>
+    <form method="POST" action="{{ url_for('register') }}">
+      <label>
+        Email
+        <input 
+          type="email" 
+          name="email" 
+          placeholder="email" 
+          required
+          autocomplete="email"
+        >
+      </label>
 
-</form>
+      <label>
+        Password
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="Create a strong password" 
+          required
+          autocomplete="new-password"
+        >
+      </label>
 
-</div>
+      <button type="submit" class="contrast">
+        Register
+      </button>
+    </form>
+
+    <footer>
+      <small>
+        Already have an account?
+        <a href="{{ url_for('login') }}">Log in</a>
+      </small>
+    </footer>
+
+  </article>
+</main>
 
 
 {% endblock %}
