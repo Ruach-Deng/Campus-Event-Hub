@@ -1,0 +1,812 @@
+
+{% block title %}Dashboard | Campus Event Hub{% endblock %}
+
+{% block body %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  :root {
+    --dash-bg: #0b0f1a;
+    --dash-surface: #131929;
+    --dash-card: #1a2235;
+    --dash-border: rgba(255,255,255,0.07);
+    --dash-accent: #4f8ef7;
+    --dash-accent-soft: rgba(79,142,247,0.12);
+    --dash-green: #34d399;
+    --dash-green-soft: rgba(52,211,153,0.12);
+    --dash-amber: #fbbf24;
+    --dash-amber-soft: rgba(251,191,36,0.12);
+    --dash-rose: #fb7185;
+    --dash-rose-soft: rgba(251,113,133,0.12);
+    --dash-purple: #a78bfa;
+    --dash-purple-soft: rgba(167,139,250,0.12);
+    --dash-text: #e2e8f0;
+    --dash-muted: #64748b;
+    --dash-subtle: #94a3b8;
+  }
+
+  /* Scope all dashboard styles */
+  .dash-root {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dash-text);
+    padding: 0;
+    margin: -1rem -1rem 0;
+    background: var(--dash-bg);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background blobs */
+  .dash-root::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(79,142,247,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dash-root::after {
+    content: '';
+    position: fixed;
+    bottom: -200px;
+    left: -100px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dash-inner {
+    position: relative;
+    z-index: 1;
+    padding: 2.5rem 2rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── Hero greeting ── */
+  .dash-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .dash-greeting {
+    font-family: 'Syne', sans-serif;
+  }
+
+  .dash-greeting .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dash-accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .dash-greeting h2 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 0.4rem;
+    line-height: 1.1;
+  }
+
+  .dash-greeting .subtitle {
+    color: var(--dash-muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .dash-hero-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--dash-accent);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(79,142,247,0.25);
+  }
+  .btn-primary:hover {
+    background: #6aa0ff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(79,142,247,0.35);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .btn-ghost {
+    background: var(--dash-card);
+    color: var(--dash-subtle);
+    border: 1px solid var(--dash-border);
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .btn-ghost:hover {
+    background: var(--dash-surface);
+    border-color: rgba(255,255,255,0.14);
+    color: var(--dash-text);
+    text-decoration: none;
+  }
+
+  /* ── Stat cards row ── */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    animation: fadeUp 0.5s ease both;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .stat-card:hover {
+    border-color: rgba(255,255,255,0.13);
+    transform: translateY(-2px);
+  }
+  .stat-card:nth-child(1) { animation-delay: 0.05s; }
+  .stat-card:nth-child(2) { animation-delay: 0.1s; }
+  .stat-card:nth-child(3) { animation-delay: 0.15s; }
+  .stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+  .stat-icon.blue  { background: var(--dash-accent-soft);  }
+  .stat-icon.green { background: var(--dash-green-soft);   }
+  .stat-icon.amber { background: var(--dash-amber-soft);   }
+  .stat-icon.purple{ background: var(--dash-purple-soft);  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--dash-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+
+  .stat-delta {
+    font-size: 0.78rem;
+    color: var(--dash-green);
+    font-weight: 500;
+  }
+
+  /* ── Main two-column layout ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Panels ── */
+  .panel {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+    animation-delay: 0.25s;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--dash-border);
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .panel-link {
+    font-size: 0.78rem;
+    color: var(--dash-accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .panel-link:hover { color: #6aa0ff; }
+
+  /* ── Event rows in main panel ── */
+  .event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--dash-border);
+    transition: background 0.15s;
+  }
+  .event-row:last-child { border-bottom: none; }
+  .event-row:hover { background: rgba(255,255,255,0.025); }
+
+  .event-date-badge {
+    min-width: 44px;
+    text-align: center;
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    border-radius: 10px;
+    padding: 0.4rem 0.3rem;
+    flex-shrink: 0;
+  }
+  .event-date-badge .month {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dash-accent);
+  }
+  .event-date-badge .day {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+  }
+
+  .event-info { flex: 1; min-width: 0; }
+
+  .event-info h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--dash-muted);
+  }
+  .event-meta span { display: flex; align-items: center; gap: 0.2rem; }
+
+  .event-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tag-academics { background: var(--dash-accent-soft);  color: var(--dash-accent); }
+  .tag-sports    { background: var(--dash-green-soft);   color: var(--dash-green); }
+  .tag-social    { background: var(--dash-amber-soft);   color: var(--dash-amber); }
+  .tag-clubs     { background: var(--dash-purple-soft);  color: var(--dash-purple); }
+  .tag-workshop  { background: var(--dash-rose-soft);    color: var(--dash-rose); }
+
+  .icon-btn {
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-subtle);
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .icon-btn:hover {
+    background: var(--dash-card);
+    color: #fff;
+    border-color: rgba(255,255,255,0.14);
+  }
+  .icon-btn.danger:hover { color: var(--dash-rose); border-color: var(--dash-rose); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--dash-muted);
+  }
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .empty-state p { font-size: 0.88rem; margin: 0 0 1rem; }
+
+  /* ── Right sidebar panels ── */
+  .side-panels { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  /* ── RSVP list ── */
+  .rsvp-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--dash-border);
+    transition: background 0.15s;
+  }
+  .rsvp-row:last-child { border-bottom: none; }
+  .rsvp-row:hover { background: rgba(255,255,255,0.025); }
+
+  .rsvp-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dash-green);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--dash-green);
+  }
+
+  .rsvp-info { flex: 1; min-width: 0; }
+  .rsvp-info .rsvp-title {
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--dash-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rsvp-info .rsvp-date {
+    font-size: 0.72rem;
+    color: var(--dash-muted);
+    margin-top: 0.1rem;
+  }
+
+  /* ── Profile card ── */
+  .profile-card {
+    background: linear-gradient(135deg, #1a2540 0%, #1a2235 100%);
+    border: 1px solid var(--dash-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    animation: fadeUp 0.5s ease 0.3s both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(79,142,247,0.2), rgba(167,139,250,0.15));
+  }
+
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--dash-accent), var(--dash-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 auto 0.75rem;
+    position: relative;
+    z-index: 1;
+    border: 3px solid var(--dash-card);
+  }
+
+  .profile-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.2rem;
+  }
+
+  .profile-email {
+    font-size: 0.78rem;
+    color: var(--dash-muted);
+    margin: 0 0 1rem;
+    word-break: break-all;
+  }
+
+  .profile-badges {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+
+  .badge {
+    background: var(--dash-accent-soft);
+    color: var(--dash-accent);
+    border: 1px solid rgba(79,142,247,0.2);
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Activity feed ── */
+  .activity-item {
+    display: flex;
+    gap: 0.85rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--dash-border);
+  }
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .activity-text { font-size: 0.8rem; color: var(--dash-subtle); line-height: 1.5; }
+  .activity-text strong { color: var(--dash-text); font-weight: 500; }
+  .activity-time { font-size: 0.68rem; color: var(--dash-muted); margin-top: 0.15rem; }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--dash-border);
+    padding: 0 1.5rem;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--dash-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.75rem 0.75rem;
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--dash-subtle); }
+  .tab-btn.active {
+    color: var(--dash-accent);
+    border-bottom-color: var(--dash-accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .dash-inner { padding: 1.5rem 1rem 2rem; }
+    .dash-stats { grid-template-columns: repeat(2, 1fr); }
+    .event-actions { display: none; }
+  }
+
+  /* delete form inline */
+  .inline-form { margin: 0; display: inline; }
+</style>
+
+<div class="dash-root">
+  <div class="dash-inner">
+
+    <!-- ── Hero ── -->
+    <div class="dash-hero">
+      <div class="dash-greeting">
+        <div class="eyebrow">👋 Welcome back</div>
+        <h2>{{ session.user_email.split('@')[0] | title }}'s Dashboard</h2>
+        <p class="subtitle">Here's what's happening on campus today.</p>
+      </div>
+      <div class="dash-hero-actions">
+        <a href="{{ url_for('post_event') }}" class="btn-primary">
+          <span>＋</span> Post Event
+        </a>
+        <a href="{{ url_for('event_list') }}" class="btn-ghost">
+          Browse Events →
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-icon blue">📅</div>
+        <div class="stat-value">{{ user_events | length if user_events else 0 }}</div>
+        <div class="stat-label">Events Posted</div>
+        <div class="stat-delta">↑ Your contributions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div class="stat-value">{{ user_rsvps | length if user_rsvps else 0 }}</div>
+        <div class="stat-label">RSVPs Made</div>
+        <div class="stat-delta">↑ Events attending</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber">🎉</div>
+        <div class="stat-value">{{ total_rsvps if total_rsvps else 0 }}</div>
+        <div class="stat-label">Total RSVPs Received</div>
+        <div class="stat-delta">↑ On your events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">🏆</div>
+        <div class="stat-value">{{ upcoming_count if upcoming_count else 0 }}</div>
+        <div class="stat-label">Upcoming Events</div>
+        <div class="stat-delta">↑ This month</div>
+      </div>
+    </div>
+
+    <!-- ── Main grid ── -->
+    <div class="dash-grid">
+
+      <!-- Left: tabbed event panels -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📋 My Events</div>
+          </div>
+
+          <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab(event,'tab-mine')">Posted by Me</button>
+            <button class="tab-btn" onclick="switchTab(event,'tab-rsvpd')">I'm Attending</button>
+          </div>
+
+          <!-- Tab: Posted by me -->
+          <div class="tab-panel active" id="tab-mine">
+            {% if user_events %}
+              {% for event in user_events %}
+              <div class="event-row">
+                <div class="event-date-badge">
+                  <div class="month">{{ event.date.strftime('%b') }}</div>
+                  <div class="day">{{ event.date.strftime('%d') }}</div>
+                </div>
+                <div class="event-info">
+                  <h4>{{ event.title }}</h4>
+                  <div class="event-meta">
+                    <span>📍 {{ event.location }}</span>
+                    <span>🕐 {{ event.date.strftime('%I:%M %p') }}</span>
+                    <span>👥 {{ event.rsvps | length }} attending</span>
+                  </div>
+                  <div style="margin-top:0.4rem;">
+                    <span class="tag tag-{{ event.category | lower }}">{{ event.category }}</span>
+                  </div>
+                </div>
+                <div class="event-actions">
+                  <a href="{{ url_for('edit_event', event_id=event.id) }}" class="icon-btn" title="Edit">✏️</a>
+                  <form class="inline-form" method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Delete this event?');">
+                    <button type="submit" class="icon-btn danger" title="Delete" style="font-size:0.75rem;">🗑</button>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <p>You haven't posted any events yet.</p>
+                <a href="{{ url_for('post_event') }}" class="btn-primary">Post Your First Event</a>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Tab: RSVP'd events -->
+          <div class="tab-panel" id="tab-rsvpd">
+            {% if user_rsvps %}
+              {% for rsvp in user_rsvps %}
+              <div class="event-row">
+                <div class="event-date-badge">
+                  <div class="month">{{ rsvp.event.date.strftime('%b') }}</div>
+                  <div class="day">{{ rsvp.event.date.strftime('%d') }}</div>
+                </div>
+                <div class="event-info">
+                  <h4>{{ rsvp.event.title }}</h4>
+                  <div class="event-meta">
+                    <span>📍 {{ rsvp.event.location }}</span>
+                    <span>🕐 {{ rsvp.event.date.strftime('%I:%M %p') }}</span>
+                    <span>👤 By {{ rsvp.event.author.email.split('@')[0] }}</span>
+                  </div>
+                  <div style="margin-top:0.4rem;">
+                    <span class="tag tag-{{ rsvp.event.category | lower }}">{{ rsvp.event.category }}</span>
+                  </div>
+                </div>
+                <div class="event-actions">
+                  <span style="font-size:0.72rem; color: var(--dash-green); font-weight:600;">✓ Going</span>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-state">
+                <div class="empty-icon">🗓️</div>
+                <p>You haven't RSVP'd to any events yet.</p>
+                <a href="{{ url_for('event_list') }}" class="btn-primary">Browse Events</a>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right sidebar -->
+      <div class="side-panels">
+
+        <!-- Profile card -->
+        <div class="profile-card">
+          <div class="profile-avatar">
+            {{ session.user_email[0] | upper }}
+          </div>
+          <div class="profile-name">{{ session.user_email.split('@')[0] | title }}</div>
+          <div class="profile-email">{{ session.user_email }}</div>
+          <div class="profile-badges">
+            <span class="badge">Student</span>
+            {% if user_events and user_events | length >= 3 %}
+              <span class="badge" style="background:var(--dash-amber-soft);color:var(--dash-amber);border-color:rgba(251,191,36,0.2);">Event Organizer</span>
+            {% endif %}
+            {% if user_rsvps and user_rsvps | length >= 5 %}
+              <span class="badge" style="background:var(--dash-green-soft);color:var(--dash-green);border-color:rgba(52,211,153,0.2);">Active Member</span>
+            {% endif %}
+          </div>
+          <a href="{{ url_for('logout') }}" class="btn-ghost" style="width:100%; justify-content:center; font-size:0.82rem;">
+            Sign Out
+          </a>
+        </div>
+
+        <!-- Quick upcoming -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">⚡ Coming Up</div>
+            <a href="{{ url_for('event_list') }}" class="panel-link">View all</a>
+          </div>
+          {% if user_rsvps %}
+            {% for rsvp in user_rsvps[:4] %}
+            <div class="rsvp-row">
+              <div class="rsvp-dot"></div>
+              <div class="rsvp-info">
+                <div class="rsvp-title">{{ rsvp.event.title }}</div>
+                <div class="rsvp-date">{{ rsvp.event.date.strftime('%b %d at %I:%M %p') }} · {{ rsvp.event.location }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state" style="padding:1.5rem;">
+              <p style="margin:0; font-size:0.82rem;">No upcoming events. <a href="{{ url_for('event_list') }}" style="color:var(--dash-accent);">Browse →</a></p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Activity feed -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🔔 Recent Activity</div>
+          </div>
+
+          {% if user_events %}
+            {% for event in user_events[:3] %}
+            <div class="activity-item">
+              <div class="activity-icon" style="background:var(--dash-accent-soft);">📅</div>
+              <div>
+                <div class="activity-text">You posted <strong>{{ event.title }}</strong></div>
+                <div class="activity-time">{{ event.created_at.strftime('%b %d, %Y') }} · {{ event.rsvps | length }} RSVP{{ 's' if event.rsvps | length != 1 }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          {% if user_rsvps %}
+            {% for rsvp in user_rsvps[:2] %}
+            <div class="activity-item">
+              <div class="activity-icon" style="background:var(--dash-green-soft);">✅</div>
+              <div>
+                <div class="activity-text">You RSVP'd to <strong>{{ rsvp.event.title }}</strong></div>
+                <div class="activity-time">{{ rsvp.event.date.strftime('%b %d, %Y') }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          {% if not user_events and not user_rsvps %}
+            <div class="empty-state" style="padding:1.5rem;">
+              <p style="margin:0; font-size:0.82rem;">No activity yet. Start exploring!</p>
+            </div>
+          {% endif %}
+        </div>
+
+      </div><!-- /side-panels -->
+    </div><!-- /dash-grid -->
+
+  </div><!-- /dash-inner -->
+</div><!-- /dash-root -->
+
+<script>
+  function switchTab(e, id) {
+    // deactivate all tabs and panels
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    // activate clicked
+    e.target.classList.add('active');
+    document.getElementById(id).classList.add('active');
+  }
+</script>
+
+{% endblock %}

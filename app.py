@@ -55,7 +55,21 @@ class Event(db.Model):
     category: so.Mapped[str] = so.mapped_column(index=True, default="No Category")
     created_at:so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
     user_id :so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')    
+    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan') 
+    
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+
+    user = User.query.get(session['user_id'])
+    user_events = Event.query.filter_by(user_id=user.id).order_by(Event.date).all()
+    user_rsvps = RSVP.query.filter_by(user_id=user.id).all()
+    total_rsvps = sum(len(e.rsvps) for e in user_events)
+    upcoming_count = Event.query.filter(Event.date >= datetime.utcnow()).count()
+    return render_template('dashboard.html',
+        user_events=user_events, user_rsvps=user_rsvps,
+        total_rsvps=total_rsvps, upcoming_count=upcoming_count)
 
 class RSVP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,8 +85,8 @@ with app.app_context():
 
 @app.route("/")
 def home():
-   # Get upcoming events (limit to 3)
-    upcoming_events = Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).limit(3).all()
+   # Get upcoming events (limit to 6)
+    upcoming_events = Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).limit(6).all()
     return render_template('home.html', upcoming_events=upcoming_events)
 
 # Route to display all events with optional filtering by category and search term

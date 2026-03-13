@@ -28,6 +28,8 @@
             <small>Posted by {{ event.author.email }} on {{ event.created_at.strftime('%B %d, %Y') }}</small>
     </header>
 
+
+
     <p><strong>Date:</strong> {{ event.date.strftime('%B %d, %Y at %I:%M %p') }} </p>
     <p><strong>Location:</strong> {{ event.location }}</p>
     <p><strong>Category:</strong> {{ event.category }}</p>
