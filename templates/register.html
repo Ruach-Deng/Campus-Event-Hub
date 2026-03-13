@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+<main class="container">
+  <article class="auth-card">
+
+    <header>
+
+      <h1>Create an account </h1>
+
+    </header>
+
+    <form method="POST" action="{{ url_for('register') }}">
+      <label>
+        Email
+        <input 
+          type="email" 
+          name="email" 
+          placeholder="email" 
+          required
+          autocomplete="email"
+        >
+      </label>
+
+      <label>
+        Password
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="Create a strong password" 
+          required
+          autocomplete="new-password"
+        >
+      </label>
+
+      <button type="submit" class="contrast">
+        Register
+      </button>
+    </form>
+
+    <footer>
+      <small>
+        Already have an account?
+        <a href="{{ url_for('login') }}">Log in</a>
+      </small>
+    </footer>
+
+  </article>
+</main>
+
+
+{% endblock %}
