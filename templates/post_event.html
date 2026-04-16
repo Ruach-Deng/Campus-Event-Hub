@@ -1,63 +1,58 @@
 {% extends "base.html" %}
 {% block title %}Post Event | Campus Event Hub{% endblock %}
-
 {% block body %}
 
-<main class="container">
-  <article style="max-width: 600px; margin: auto;">
-    
-    <header>
-      <h2>📢 Post a New Event</h2>
-      <p>Share your campus event with the community</p>
-    </header>
+<div style="max-width: 580px; margin: 2rem auto;">
+  <div style="background: #FFFFFF; border: 1px solid #E2DDD6; border-radius: 20px; padding: 2.5rem;">
+
+    <!-- Header -->
+    <div style="margin-bottom: 2rem;">
+      <h1 style="font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; color: #1A1814; margin: 0 0 0.4rem;">Post a New Event</h1>
+      <p style="color: #7A7570; font-size: 14px; margin: 0;">Share what's happening on campus with everyone</p>
+    </div>
 
     <form method="POST" action="{{ url_for('post_event') }}">
-      <fieldset>
 
-        <label>
-          Event Title
-          <input type="text" name="title" placeholder="e.g. Spring Festival" required />
-        </label>
+      <div class="form-group">
+        <label>Event Title</label>
+        <input type="text" name="title" placeholder="e.g. Spring Music Festival" required>
+      </div>
 
-        <label>
-          Date & Time
-          <input type="datetime-local" name="date" required />
-        </label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label>Date & Time</label>
+          <input type="datetime-local" name="date" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category" required>
+            <option value="">Select one</option>
+            <option value="Academics">📚 Academics</option>
+            <option value="Sports">⚽ Sports</option>
+            <option value="Social">🎉 Social</option>
+            <option value="Clubs">🏛️ Clubs</option>
+            <option value="Workshop">🛠️ Workshop</option>
+          </select>
+        </div>
+      </div>
 
-        <label>
-          Location
-          <input type="text" name="location" placeholder="e.g. Main Quad" required />
-        </label>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" name="location" placeholder="e.g. Main Quad, Gym, Room 204" required>
+      </div>
 
-        <label>
-                Category
-                <select name="category" required>
-                    <option value="">Select a category</option>
-                    <option value="Academics">Academics</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Social">Social</option>
-                    <option value="Clubs">Clubs</option>
-                    <option value="Workshop">Workshop</option>
-                </select>
-            </label>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Tell people what this event is about..." rows="4" required></textarea>
+      </div>
 
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-accent" style="flex: 1; justify-content: center; padding: 0.7rem;">Post Event</button>
+        <a href="{{ url_for('event_list') }}" class="btn btn-outline">Cancel</a>
+      </div>
 
-        <label>
-          Description
-          <textarea name="description" placeholder="Details about the event..." rows="4" required ></textarea>
-        </label>
-
-      </fieldset>
-
-      <footer style="display: flex; gap: 1rem;">
-        <button type="submit">PostEvent</button>
-        <a href="{{ url_for('event_list') }}" role="button" class="secondary">
-          Cancel
-        </a>
-      </footer>
     </form>
-
-  </article>
-</main>
+  </div>
+</div>
 
 {% endblock %}

@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, session, url_for
 import os
 from flask_sqlalchemy import SQLAlchemy
@@ -31,45 +30,31 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(150), nullable=False)
     events = db.relationship('Event', backref='author', lazy=True)
     rsvps = db.relationship('RSVP', backref='user', lazy=True)
-    
-    
-    # Methods to set and check password
+
     def set_password(self, password):
         self.password = generate_password_hash(password)
+
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
-# Define a user loader function to load a user from the database based on their user ID
+
 @login.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 # Define the Event model
 class Event(db.Model):
-    # Defining all the class variables
     id = db.Column(db.Integer, primary_key=True)
     title: so.Mapped[str] = so.mapped_column(index=True, default="No title")
     date: so.Mapped[datetime] = so.mapped_column(index=True, default=datetime.now)
     location: so.Mapped[str] = so.mapped_column(index=True, default="No Location")
     description: so.Mapped[str] = so.mapped_column(index=True, default="No Description")
     category: so.Mapped[str] = so.mapped_column(index=True, default="No Category")
-    created_at:so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
-    user_id :so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan') 
-    
+    created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+    user_id: so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-
-    user = User.query.get(session['user_id'])
-    user_events = Event.query.filter_by(user_id=user.id).order_by(Event.date).all()
-    user_rsvps = RSVP.query.filter_by(user_id=user.id).all()
-    total_rsvps = sum(len(e.rsvps) for e in user_events)
-    upcoming_count = Event.query.filter(Event.date >= datetime.utcnow()).count()
-    return render_template('dashboard.html',
-        user_events=user_events, user_rsvps=user_rsvps,
-        total_rsvps=total_rsvps, upcoming_count=upcoming_count)
 
 class RSVP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,28 +63,29 @@ class RSVP(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-#Initialize the database and create the user table
+# Initialize the database
 with app.app_context():
     db.create_all()
 
 
 @app.route("/")
 def home():
-   # Get upcoming events (limit to 6)
     upcoming_events = Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).limit(6).all()
     return render_template('home.html', upcoming_events=upcoming_events)
 
-# Route to display all events with optional filtering by category and search term
+
+# ── Event list with upcoming/past filter ──
 @app.route('/events', methods=['GET', 'POST'])
 def event_list():
     category = request.args.get('category')
     search = request.args.get('search')
-    
+    tab = request.args.get('tab', 'upcoming')  # NEW: upcoming or past
+
     query = Event.query
-    
+
     if category:
         query = query.filter_by(category=category)
-    
+
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -109,36 +95,54 @@ def event_list():
                 Event.location.like(search_term)
             )
         )
-    
-    events = query.order_by(Event.date.desc()).all()
-    return render_template('events.html', events=events, category=category, search=search)
+
+    # NEW: filter by upcoming or past
+    if tab == 'past':
+        query = query.filter(Event.date < datetime.now())
+        events = query.order_by(Event.date.desc()).all()
+    else:
+        query = query.filter(Event.date >= datetime.now())
+        events = query.order_by(Event.date.asc()).all()
+
+    return render_template('events.html', events=events, category=category, search=search, tab=tab)
+
+
+# ── NEW: Event detail page ──
+@app.route('/event/<int:event_id>')
+def event_detail(event_id):
+    event = Event.query.get_or_404(event_id)
+    user_rsvpd = False
+    if 'user_id' in session:
+        user_rsvpd = RSVP.query.filter_by(
+            user_id=session['user_id'], event_id=event_id
+        ).first() is not None
+    return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd)
+
 
 @app.route('/post-event', methods=['GET', 'POST'])
 @login_required
 def post_event():
-
     if 'user_id' not in session:
         flash('Please login to post an event', 'error')
         return redirect(url_for('login'))
-    
+
     if request.method == 'POST':
         title = request.form.get('title')
         date_str = request.form.get('date')
         location = request.form.get('location')
         description = request.form.get('description')
         category = request.form.get('category')
-        
-        # Validation
+
         if not all([title, date_str, location, description, category]):
             flash('All fields are required', 'error')
             return redirect(url_for('post_event'))
-        
+
         try:
             event_date = datetime.fromisoformat(date_str)
         except ValueError:
             flash('Invalid date format', 'error')
             return redirect(url_for('post_event'))
-        
+
         new_event = Event(
             title=title,
             date=event_date,
@@ -147,38 +151,39 @@ def post_event():
             category=category,
             user_id=current_user.id
         )
-        
+
         db.session.add(new_event)
         db.session.commit()
-        
+
         flash('Event posted successfully!', 'success')
         return redirect(url_for('event_list'))
-    
+
     return render_template('post_event.html')
+
 
 @app.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
 def edit_event(event_id):
     if 'user_id' not in session:
         flash('Please login to edit events', 'error')
         return redirect(url_for('login'))
-    
+
     event = Event.query.get_or_404(event_id)
-    
+
     if event.user_id != session['user_id']:
         flash('You can only edit your own events', 'error')
         return redirect(url_for('event_list'))
-    
+
     if request.method == 'POST':
         event.title = request.form.get('title')
         event.date = datetime.fromisoformat(request.form.get('date'))
         event.location = request.form.get('location')
         event.description = request.form.get('description')
         event.category = request.form.get('category')
-        
+
         db.session.commit()
         flash('Event updated successfully!', 'success')
         return redirect(url_for('event_list'))
-    
+
     return render_template('edit_event.html', event=event)
 
 
@@ -187,30 +192,30 @@ def delete_event(event_id):
     if 'user_id' not in session:
         flash('Please login to delete events', 'error')
         return redirect(url_for('login'))
-    
+
     event = Event.query.get_or_404(event_id)
-    
+
     if event.user_id != session['user_id']:
         flash('You can only delete your own events', 'error')
         return redirect(url_for('event_list'))
-    
+
     db.session.delete(event)
     db.session.commit()
-    
+
     flash('Event deleted successfully!', 'success')
     return redirect(url_for('event_list'))
+
 
 @app.route('/event/<int:event_id>/rsvp', methods=['POST'])
 def rsvp_event(event_id):
     if 'user_id' not in session:
         flash('Please login to RSVP', 'error')
         return redirect(url_for('login'))
-    
+
     event = Event.query.get_or_404(event_id)
-    
-    # Check if already RSVP'd
+
     existing_rsvp = RSVP.query.filter_by(user_id=session['user_id'], event_id=event_id).first()
-    
+
     if existing_rsvp:
         flash('You have already RSVP\'d to this event', 'info')
     else:
@@ -218,60 +223,91 @@ def rsvp_event(event_id):
         db.session.add(new_rsvp)
         db.session.commit()
         flash('RSVP successful!', 'success')
-    
-    return redirect(url_for('event_list'))
-    
+
+    return redirect(url_for('event_detail', event_id=event_id))
+
+
+# ── NEW: Cancel RSVP ──
+@app.route('/event/<int:event_id>/cancel-rsvp', methods=['POST'])
+def cancel_rsvp(event_id):
+    if 'user_id' not in session:
+        flash('Please login to cancel RSVP', 'error')
+        return redirect(url_for('login'))
+
+    rsvp = RSVP.query.filter_by(user_id=session['user_id'], event_id=event_id).first()
+
+    if rsvp:
+        db.session.delete(rsvp)
+        db.session.commit()
+        flash('RSVP cancelled successfully', 'success')
+    else:
+        flash('No RSVP found to cancel', 'info')
+
+    return redirect(url_for('event_detail', event_id=event_id))
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    user = User.query.get(session['user_id'])
+    user_events = Event.query.filter_by(user_id=user.id).order_by(Event.date).all()
+    user_rsvps = RSVP.query.filter_by(user_id=user.id).all()
+    total_rsvps = sum(len(e.rsvps) for e in user_events)
+    upcoming_count = Event.query.filter(Event.date >= datetime.utcnow()).count()
+    return render_template('dashboard.html',
+        user_events=user_events, user_rsvps=user_rsvps,
+        total_rsvps=total_rsvps, upcoming_count=upcoming_count)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
+
         user = User.query.filter_by(email=email).first()
-        
+
         if user and check_password_hash(user.password, password):
-            login_user(user) 
+            login_user(user)
             session['user_id'] = user.id
             session['user_email'] = user.email
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
             flash('Invalid email or password', 'error')
-    
+
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
-        # Validation
+
         if not email or not password:
             flash('Email and password are required', 'error')
             return redirect(url_for('register'))
-        
+
         if len(password) < 6:
             flash('Password must be at least 6 characters', 'error')
             return redirect(url_for('register'))
-        
-        # Check if user exists
+
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email already registered', 'error')
             return redirect(url_for('register'))
-        
-        # Create new user
+
         hashed_password = generate_password_hash(password)
         new_user = User(email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        
+
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
-    
+
     return render_template('register.html')
+
 
 @app.route('/logout')
 @login_required
@@ -280,11 +316,7 @@ def logout():
     session.clear()
     flash('Logged out successfully', 'success')
     return redirect(url_for('home'))
-        
+
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-

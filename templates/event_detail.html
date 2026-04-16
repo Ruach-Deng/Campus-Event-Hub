@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} | Campus Event Hub{% endblock %}
+{% block body %}
+
+<!-- Back link -->
+<a href="{{ url_for('event_list') }}" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13px; color: #7A7570; text-decoration: none; font-weight: 500; margin-bottom: 1.5rem;">
+  ← Back to Events
+</a>
+
+<div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start;">
+
+  <!-- Left: main content -->
+  <div>
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD6; border-radius: 20px; overflow: hidden;">
+
+      <!-- Event header band -->
+      <div style="background: #FAF0ED; padding: 2rem 2rem 1.5rem; border-bottom: 1px solid #E2DDD6;">
+        <span class="tag {{ event.category }}" style="margin-bottom: 0.75rem; display: inline-block;">{{ event.category }}</span>
+        <h1 style="font-family: 'Fraunces', serif; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; letter-spacing: -0.02em; color: #1A1814; margin: 0 0 0.5rem; line-height: 1.2;">{{ event.title }}</h1>
+        <p style="font-size: 13px; color: #7A7570; margin: 0;">
+          Posted by <strong style="color: #1A1814;">{{ event.author.email.split('@')[0] }}</strong> on {{ event.created_at.strftime('%B %d, %Y') }}
+        </p>
+      </div>
+
+      <!-- Event meta -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0; border-bottom: 1px solid #E2DDD6;">
+        <div style="padding: 1.25rem 1.5rem; border-right: 1px solid #E2DDD6;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #7A7570; font-weight: 600; margin-bottom: 0.35rem;">Date & Time</div>
+          <div style="font-size: 14px; font-weight: 500; color: #1A1814;">{{ event.date.strftime('%B %d, %Y') }}</div>
+          <div style="font-size: 13px; color: #7A7570;">{{ event.date.strftime('%I:%M %p') }}</div>
+        </div>
+        <div style="padding: 1.25rem 1.5rem; border-right: 1px solid #E2DDD6;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #7A7570; font-weight: 600; margin-bottom: 0.35rem;">Location</div>
+          <div style="font-size: 14px; font-weight: 500; color: #1A1814;">{{ event.location }}</div>
+        </div>
+        <div style="padding: 1.25rem 1.5rem;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #7A7570; font-weight: 600; margin-bottom: 0.35rem;">Attendees</div>
+          <div style="font-size: 14px; font-weight: 500; color: #1A1814;">
+            <span id="attendee-count">{{ event.rsvps|length }}</span> going
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div style="padding: 1.75rem 1.5rem;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #7A7570; font-weight: 600; margin-bottom: 0.75rem;">About this event</div>
+        <p style="font-size: 15px; color: #1A1814; line-height: 1.75; margin: 0; white-space: pre-line;">{{ event.description }}</p>
+      </div>
+
+    </div>
+
+    <!-- Owner actions -->
+    {% if session.user_id == event.user_id %}
+    <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+      <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-outline">✏️ Edit Event</a>
+      <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Delete this event?');" style="margin: 0;">
+        <button type="submit" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.2rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; background: #FCECEA; color: #9A2B1E; border: 1px solid #F5C0BB; transition: all 0.2s;">
+          🗑 Delete Event
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: RSVP card -->
+  <div style="position: sticky; top: 88px;">
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD6; border-radius: 16px; padding: 1.5rem;">
+
+      <div style="font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 600; color: #1A1814; margin-bottom: 1rem;">Your RSVP</div>
+
+      {% if session.user_id %}
+        {% if user_rsvpd %}
+          <!-- Already RSVP'd -->
+          <div id="rsvp-status" style="display: flex; align-items: center; gap: 0.5rem; background: #EBF7EE; border: 1px solid #B6DFC1; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem;">
+            <span style="font-size: 16px;">✅</span>
+            <span style="font-size: 14px; font-weight: 500; color: #1E6B33;">You're going!</span>
+          </div>
+          <form method="POST" action="{{ url_for('cancel_rsvp', event_id=event.id) }}" style="margin: 0;" id="cancel-form">
+            <button type="submit" class="btn btn-outline" style="width: 100%; justify-content: center;" id="cancel-btn" onclick="handleCancel(event)">
+              Cancel RSVP
+            </button>
+          </form>
+        {% else %}
+          <!-- Not RSVP'd yet -->
+          <p style="font-size: 13px; color: #7A7570; margin-bottom: 1rem;">
+            Join <span id="rsvp-join-count">{{ event.rsvps|length }}</span> other{{ 's' if event.rsvps|length != 1 }} attending this event.
+          </p>
+          <form method="POST" action="{{ url_for('rsvp_event', event_id=event.id) }}" style="margin: 0;" id="rsvp-form">
+            <button type="submit" class="btn btn-accent" style="width: 100%; justify-content: center; padding: 0.7rem; transition: all 0.2s;" id="rsvp-btn" onclick="handleRSVP(event)">
+              RSVP to this event
+            </button>
+          </form>
+        {% endif %}
+      {% else %}
+        <p style="font-size: 13px; color: #7A7570; margin-bottom: 1rem;">Sign in to RSVP to this event.</p>
+        <a href="{{ url_for('login') }}" class="btn btn-accent" style="width: 100%; justify-content: center; padding: 0.7rem; display: flex;">Sign in to RSVP</a>
+      {% endif %}
+
+      <!-- Attendee avatars -->
+      <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid #E2DDD6;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #7A7570; font-weight: 600; margin-bottom: 0.5rem;">Attendees</div>
+        <div id="avatar-row" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          {% if event.rsvps %}
+            {% for rsvp in event.rsvps[:8] %}
+              <div class="avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #FAF0ED; border: 2px solid #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #C84B2F;">
+                {{ rsvp.user.email[0] | upper }}
+              </div>
+            {% endfor %}
+            {% if event.rsvps|length > 8 %}
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: #E2DDD6; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #7A7570;">
+                +{{ event.rsvps|length - 8 }}
+              </div>
+            {% endif %}
+          {% else %}
+            <p id="no-attendees" style="font-size: 13px; color: #7A7570; margin: 0;">Be the first to RSVP!</p>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Animate a number counting up or down
+  function animateCount(el, from, to, duration) {
+    const start = performance.now();
+    const diff = to - from;
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease out cubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(from + diff * ease);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function handleRSVP(e) {
+    e.preventDefault();
+    const btn = document.getElementById('rsvp-btn');
+    const countEl = document.getElementById('attendee-count');
+    const joinEl = document.getElementById('rsvp-join-count');
+
+    // Button loading state
+    btn.textContent = 'RSVP\'ing...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+
+    const currentCount = parseInt(countEl.textContent);
+    const newCount = currentCount + 1;
+
+    // Animate count up
+    animateCount(countEl, currentCount, newCount, 600);
+    if (joinEl) animateCount(joinEl, currentCount, newCount, 600);
+
+    // Add a new avatar optimistically
+    const avatarRow = document.getElementById('avatar-row');
+    const noAttendees = document.getElementById('no-attendees');
+    if (noAttendees) noAttendees.remove();
+
+    const newAvatar = document.createElement('div');
+    newAvatar.style.cssText = 'width:32px;height:32px;border-radius:50%;background:#FAF0ED;border:2px solid #FFFFFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#C84B2F;opacity:0;transform:scale(0.5);transition:all 0.3s ease;';
+    newAvatar.textContent = '{{ session.user_email[0] | upper if session.user_email else "?" }}';
+    avatarRow.appendChild(newAvatar);
+
+    // Animate avatar in
+    setTimeout(() => {
+      newAvatar.style.opacity = '1';
+      newAvatar.style.transform = 'scale(1)';
+    }, 100);
+
+    // Submit form after animation
+    setTimeout(() => {
+      document.getElementById('rsvp-form').submit();
+    }, 700);
+  }
+
+  function handleCancel(e) {
+    e.preventDefault();
+    const btn = document.getElementById('cancel-btn');
+    const countEl = document.getElementById('attendee-count');
+
+    btn.textContent = 'Cancelling...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+
+    const currentCount = parseInt(countEl.textContent);
+    animateCount(countEl, currentCount, Math.max(0, currentCount - 1), 600);
+
+    setTimeout(() => {
+      document.getElementById('cancel-form').submit();
+    }, 700);
+  }
+</script>
+
+{% endblock %}

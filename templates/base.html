@@ -1,62 +1,419 @@
 <!DOCTYPE html>
-
 <html lang="en">
-    <head>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Campus Event Hub{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-         <title>{% block title %}Campus Event Hub{% endblock %}</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-        <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --border: #E2DDD6;
+    --text: #1A1814;
+    --muted: #7A7570;
+    --accent: #C84B2F;
+    --accent-light: #FAF0ED;
+    --accent-dark: #9A3320;
+    --nav-height: 68px;
+  }
 
-    </head>
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-    <body>
+  /* ── NAV ── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(247, 245, 240, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    height: var(--nav-height);
+  }
 
-        <header class="container">
-        <h1>Campus Event Hub</h1>
+  .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
 
-        <nav>
-            <a href=" {{ url_for('home')}}">Home</a>
-            <a href="{{ url_for('event_list') }}">All Events</a>
-            <a href="{{ url_for('post_event') }}">Post Event</a>
-            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+  .nav-brand {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+    letter-spacing: -0.02em;
+  }
 
-            {% if session.user_id %}
-                <a href="{{ url_for('logout') }}">Logout ({{ session.user_email }})</a>
-            {% else %}
-                <a href="{{url_for('login')}}">Login</a>
-            {% endif %}
+  .nav-brand span {
+    color: var(--accent);
+  }
 
-        </nav>
+  .nav-search {
+    flex: 1;
+    max-width: 340px;
+  }
 
+  .nav-search form {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
 
-        <form   method="GET" action="{{ url_for('event_list') }}">
-            <input type="search" name="search" placeholder="search events" aria-label="Search" value="{{ request.args.get('search', '') }}"/> 
-            <button type="submit">Search</button>
-        </form>
-    </header>
+  .nav-search form:focus-within {
+    border-color: var(--accent);
+  }
 
-    <main class="container">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <article class="flash-{{ category }}">
-                        {{ message }}
-                    </article>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+  .nav-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+  }
 
+  .nav-search input::placeholder { color: var(--muted); }
 
-        {% block body %}{% endblock %}
-    </main>
+  .nav-search button {
+    border: none;
+    background: var(--accent);
+    color: white;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
 
-    <footer>
-        <p style="text-align:center; margin: 1rem 0;">© 2025 Campus Event Hub</p>
-    </footer>
+  .nav-search button:hover { background: var(--accent-dark); }
 
-    
-    </body>
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-links a:hover {
+    color: var(--text);
+    background: var(--border);
+  }
+
+  .nav-links a.btn-primary {
+    background: var(--accent);
+    color: white;
+    padding: 0.4rem 1rem;
+  }
+
+  .nav-links a.btn-primary:hover { background: var(--accent-dark); }
+
+  .nav-user {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 2rem;
+  }
+
+  /* ── FLASH MESSAGES ── */
+  .flash-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .flash {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .flash-success { background: #EBF7EE; color: #1E6B33; border: 1px solid #B6DFC1; }
+  .flash-error   { background: #FCECEA; color: #9A2B1E; border: 1px solid #F5C0BB; }
+  .flash-info    { background: #EAF2FB; color: #1A527A; border: 1px solid #B4D4F0; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── SHARED COMPONENTS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.2rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-accent:hover { background: var(--accent-dark); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-outline:hover { background: var(--border); }
+
+  .tag {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .tag.Academics { background: #EAF2FB; color: #185FA5; }
+  .tag.Sports    { background: #EAF3DE; color: #3B6D11; }
+  .tag.Social    { background: #FAEEDA; color: #854F0B; }
+  .tag.Clubs     { background: #EEEDFE; color: #534AB7; }
+  .tag.Workshop  { background: #FBEAF0; color: #993556; }
+
+  /* ── EVENT CARD ── */
+  .event-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .event-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    transform: translateY(-2px);
+  }
+
+  .event-card h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .event-card .meta {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .event-card .desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .event-card .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  /* ── FORM STYLES ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 520px;
+    margin: 2rem auto;
+  }
+
+  .form-card h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .form-group {
+    margin-bottom: 1.1rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent);
+    background: white;
+  }
+
+  .form-group textarea { resize: vertical; min-height: 100px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="{{ url_for('home') }}" class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+      <img src="{{ url_for('static', filename='images/emu_logo.png') }}" alt="EMU Logo" style="height: 36px; width: auto; object-fit: contain;">
+      Campus<span>Hub</span>
+    </a>
+
+    <div class="nav-search">
+      <form method="GET" action="{{ url_for('event_list') }}">
+        <input type="search" name="search" placeholder="Search events..." value="{{ request.args.get('search', '') }}">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="nav-links">
+      <a href="{{ url_for('home') }}">Home</a>
+      <a href="{{ url_for('event_list') }}">Events</a>
+      {% if session.user_id %}
+        <a href="{{ url_for('post_event') }}" class="btn-primary">+ Post Event</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}" class="btn-primary">Sign Up</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-wrap" id="flash-wrap">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block body %}{% endblock %}
+</main>
+
+<footer>
+  <p>© 2025 Campus Event Hub · Built for students, by students</p>
+</footer>
+
+<script>
+  // Auto-dismiss flash messages after 3 seconds
+  const flashWrap = document.getElementById('flash-wrap');
+  if (flashWrap) {
+    setTimeout(() => {
+      flashWrap.style.transition = 'opacity 0.5s ease';
+      flashWrap.style.opacity = '0';
+      setTimeout(() => flashWrap.remove(), 500);
+    }, 3000);
+  }
+</script>
+
+</body>
 </html>

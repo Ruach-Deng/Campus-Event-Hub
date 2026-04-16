@@ -1,118 +1,120 @@
 {% extends "base.html" %}
-
 {% block title %}Home | Campus Event Hub{% endblock %}
-
 {% block body %}
 
-
-    <section class="grid">
-      <div>
-        <h2>Event Categories</h2>
-        <ul>
-            <li><a href="{{ url_for('event_list', category='Academics') }}">Academics</a></li>
-            <li><a href="{{ url_for('event_list', category='Sports') }}">Sports</a></li>
-            <li><a href="{{ url_for('event_list', category='Social') }}">Social</a></li>
-            <li><a href="{{ url_for('event_list', category='Clubs') }}">Clubs</a></li>
-            <li><a href="{{ url_for('event_list', category='Workshop') }}">Students Workshop</a></li>
-        </ul>
-      </div>
-
-<div>
-        <h2>Event Hightlights</h2>
-        <!-- Slideshow container -->
-       
-     <div class="slideshow-container">
-
-       <div class="mySlides fade">
-       <div class="numbertext">1 / 3</div>
-       <img src="{{ url_for('static', filename='images/soccer.jpg') }}" style="width:100%">
-       <div class="text">Soccer Event</div>
-
-     </div>
-
-     <div class="mySlides fade">
-       <div class="numbertext">2 / 3</div>
-       <img src="{{ url_for('static', filename='images/foodfest.jpg') }}" style="width:100%">
-       <div class="text">Food Festival</div>
-     </div>
-
-     <div class="mySlides fade">
-      <div class="numbertext">3 / 3</div>
-      <img src="{{ url_for('static', filename='images/pickleball.jpg')}}" style="width:100%">
-      <div class="text">pickleball</div>
-     </div>
-
-  <!-- Next and previous buttons -->
-     <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-     <a class="next" onclick="plusSlides(1)">&#10095;</a>
-  
-   </div>
-   <br>
-
-<!-- The dots/circles -->
-   <div style="text-align:center">
-     <span class="dot" onclick="currentSlide(1)"></span>
-     <span class="dot" onclick="currentSlide(2)"></span>
-     <span class="dot" onclick="currentSlide(3)"></span>
+<!-- HERO -->
+<section style="padding: 3.5rem 0 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
+  <div style="max-width: 520px;">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 100px; margin-bottom: 1.2rem; letter-spacing: 0.05em; text-transform: uppercase;">
+      🎓 EMU Campus
     </div>
+    <h1 style="font-family: 'Fraunces', serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 1rem;">
+      Discover what's<br><em style="color: var(--accent); font-style: italic;">happening</em> on campus
+    </h1>
+    <p style="color: var(--muted); font-size: 1rem; line-height: 1.65; margin-bottom: 1.75rem; max-width: 420px;">
+      Find events, RSVP in one click, and stay connected with everything happening around you.
+    </p>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('event_list') }}" class="btn btn-accent">Browse all events</a>
+      {% if not session.user_id %}
+        <a href="{{ url_for('register') }}" class="btn btn-outline">Create account</a>
+      {% else %}
+        <a href="{{ url_for('post_event') }}" class="btn btn-outline">+ Post an event</a>
+      {% endif %}
+    </div>
+  </div>
 
-</div>
-    </section>
-
-    <section>
-        <h2>Upcoming Events</h2>
-
-      <div class="event-wrapper">
-
-        {% for event in upcoming_events %}
-        <article>
-            <h3>{{ event.title }}</h3>
-            <p><strong>Date:</strong> {{ event.date.strftime('%B %d, %Y at %I:%M %p') }}</p>
-            <p><strong>Location:</strong> {{ event.location }}</p>
-            <p><strong>Category:</strong> {{ event.category }}</p>
-            <p>{{ event.description[:100] }}...</p>
-            <form method="POST" action="{{ url_for('rsvp_event', event_id=event.id) }}">
-                <button type="submit">RSVP</button>
-            </form>
-        </article>
-        {% else %}
-        <p>No upcoming events. <a href="{{ url_for('post_event') }}">Post one now!</a></p>
-        {% endfor %}
+  <!-- Slideshow -->
+  <div style="flex-shrink: 0; width: min(420px, 45vw); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); position: relative;">
+    <div class="slide" style="display:block; position: relative;">
+      <img src="{{ url_for('static', filename='images/soccer.jpg') }}" style="width:100%; height: 260px; object-fit: cover; display: block;">
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); padding: 1.5rem 1.25rem 1rem;">
+        <span style="color: white; font-size: 14px; font-weight: 500;">⚽ Soccer Event</span>
       </div>
+    </div>
+    <div class="slide" style="display:none; position: relative;">
+      <img src="{{ url_for('static', filename='images/foodfest.jpg') }}" style="width:100%; height: 260px; object-fit: cover; display: block;">
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); padding: 1.5rem 1.25rem 1rem;">
+        <span style="color: white; font-size: 14px; font-weight: 500;">🍜 Food Festival</span>
+      </div>
+    </div>
+    <div class="slide" style="display:none; position: relative;">
+      <img src="{{ url_for('static', filename='images/pickleball.jpg') }}" style="width:100%; height: 260px; object-fit: cover; display: block;">
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); padding: 1.5rem 1.25rem 1rem;">
+        <span style="color: white; font-size: 14px; font-weight: 500;">🏓 Pickleball</span>
+      </div>
+    </div>
+    <!-- Dots -->
+    <div style="position: absolute; bottom: 0.75rem; right: 1rem; display: flex; gap: 5px;">
+      <span class="dot active" onclick="goSlide(0)" style="width:7px;height:7px;border-radius:50%;background:white;cursor:pointer;opacity:1;transition:opacity 0.2s;"></span>
+      <span class="dot" onclick="goSlide(1)" style="width:7px;height:7px;border-radius:50%;background:white;cursor:pointer;opacity:0.4;transition:opacity 0.2s;"></span>
+      <span class="dot" onclick="goSlide(2)" style="width:7px;height:7px;border-radius:50%;background:white;cursor:pointer;opacity:0.4;transition:opacity 0.2s;"></span>
+    </div>
+  </div>
+</section>
 
-    </section>
+<!-- CATEGORIES -->
+<section style="margin-bottom: 3rem;">
+  <h2 style="font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; letter-spacing: -0.01em;">Browse by category</h2>
+  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+    {% set cats = [('Academics', '📚'), ('Sports', '⚽'), ('Social', '🎉'), ('Clubs', '🏛️'), ('Workshop', '🛠️')] %}
+    {% for cat, icon in cats %}
+      <a href="{{ url_for('event_list', category=cat) }}" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; font-size: 14px; font-weight: 500; color: var(--text); text-decoration: none; transition: all 0.2s;">
+        {{ icon }} {{ cat }}
+      </a>
+    {% endfor %}
+  </div>
+</section>
 
+<!-- UPCOMING EVENTS -->
+<section>
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+    <h2 style="font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em;">Upcoming events</h2>
+    <a href="{{ url_for('event_list') }}" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 500;">View all →</a>
+  </div>
+
+  {% if upcoming_events %}
+    <div class="events-grid">
+      {% for event in upcoming_events %}
+        <a href="{{ url_for('event_detail', event_id=event.id) }}" style="text-decoration: none; color: inherit;">
+          <article class="event-card">
+            <span class="tag {{ event.category }}">{{ event.category }}</span>
+            <h3>{{ event.title }}</h3>
+            <div class="meta">
+              <span>📅 {{ event.date.strftime('%b %d, %Y · %I:%M %p') }}</span>
+              <span>📍 {{ event.location }}</span>
+            </div>
+            <p class="desc">{{ event.description[:110] }}{% if event.description|length > 110 %}…{% endif %}</p>
+            <div class="card-footer">
+              <span style="font-size: 12px; color: var(--muted);">{{ event.rsvps|length }} attending</span>
+              <span style="font-size: 13px; color: var(--accent); font-weight: 500;">View details →</span>
+            </div>
+          </article>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 4rem 2rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 16px;">
+      <p style="color: var(--muted); margin-bottom: 1rem;">No upcoming events yet.</p>
+      <a href="{{ url_for('post_event') }}" class="btn btn-accent">Post the first one</a>
+    </div>
+  {% endif %}
+</section>
 
 <script>
+let cur = 0;
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.dot');
 
-    let slideIndex = 1;
-showSlides(slideIndex);
-
-// Next/previous controls
-function plusSlides(n) {
-  showSlides(slideIndex += n);
+function goSlide(n) {
+  slides[cur].style.display = 'none';
+  dots[cur].style.opacity = '0.4';
+  cur = n;
+  slides[cur].style.display = 'block';
+  dots[cur].style.opacity = '1';
 }
 
-// Thumbnail image controls
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
-
-function showSlides(n) {
-  let i;
-  let slides = document.getElementsByClassName("mySlides");
-  let dots = document.getElementsByClassName("dot");
-  if (n > slides.length) {slideIndex = 1}
-  if (n < 1) {slideIndex = slides.length}
-  for (i = 0; i < slides.length; i++) {
-    slides[i].style.display = "none";
-  }
-  for (i = 0; i < dots.length; i++) {
-    dots[i].className = dots[i].className.replace(" active", "");
-  }
-  slides[slideIndex-1].style.display = "block";
-  dots[slideIndex-1].className += " active";
-}
-
+setInterval(() => goSlide((cur + 1) % slides.length), 3500);
 </script>
+
 {% endblock %}
