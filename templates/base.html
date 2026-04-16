@@ -39,17 +39,16 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(247, 245, 240, 0.92);
+    background: rgba(247, 245, 240, 0.96);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    height: var(--nav-height);
   }
 
   .nav-inner {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
-    height: 100%;
+    height: var(--nav-height);
     display: flex;
     align-items: center;
     gap: 2rem;
@@ -63,11 +62,12 @@
     text-decoration: none;
     white-space: nowrap;
     letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
-  .nav-brand span {
-    color: var(--accent);
-  }
+  .nav-brand span { color: var(--accent); }
 
   .nav-search {
     flex: 1;
@@ -76,7 +76,6 @@
 
   .nav-search form {
     display: flex;
-    gap: 0;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 100px;
@@ -84,9 +83,7 @@
     transition: border-color 0.2s;
   }
 
-  .nav-search form:focus-within {
-    border-color: var(--accent);
-  }
+  .nav-search form:focus-within { border-color: var(--accent); }
 
   .nav-search input {
     flex: 1;
@@ -146,13 +143,104 @@
 
   .nav-links a.btn-primary:hover { background: var(--accent-dark); }
 
-  .nav-user {
-    font-size: 12px;
-    color: var(--muted);
-    max-width: 140px;
+  /* ── HAMBURGER BUTTON ── */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    margin-left: auto;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .hamburger:hover { background: var(--border); }
+
+  .hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  /* Animate hamburger to X when open */
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── MOBILE MENU ── */
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 1rem 1.5rem 1.5rem;
+    gap: 0.25rem;
+  }
+
+  .mobile-menu.open { display: flex; }
+
+  .mobile-menu form {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 100px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin-bottom: 0.75rem;
+  }
+
+  .mobile-menu form input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .mobile-menu form button {
+    border: none;
+    background: var(--accent);
+    color: white;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+  }
+
+  .mobile-menu a {
+    text-decoration: none;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .mobile-menu a:hover { background: var(--bg); }
+
+  .mobile-menu a.btn-primary {
+    background: var(--accent);
+    color: white;
+    text-align: center;
+    margin-top: 0.25rem;
+    padding: 0.65rem 1rem;
+  }
+
+  .mobile-menu .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 0;
   }
 
   /* ── MAIN ── */
@@ -211,19 +299,9 @@
     transition: all 0.2s;
   }
 
-  .btn-accent {
-    background: var(--accent);
-    color: white;
-  }
-
+  .btn-accent { background: var(--accent); color: white; }
   .btn-accent:hover { background: var(--accent-dark); }
-
-  .btn-outline {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
   .btn-outline:hover { background: var(--border); }
 
   .tag {
@@ -252,6 +330,7 @@
     flex-direction: column;
     gap: 0.5rem;
     transition: box-shadow 0.2s, transform 0.2s;
+    height: 100%;
   }
 
   .event-card:hover {
@@ -307,17 +386,7 @@
     margin: 2rem auto;
   }
 
-  .form-card h2 {
-    font-family: 'Fraunces', serif;
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.02em;
-  }
-
-  .form-group {
-    margin-bottom: 1.1rem;
-  }
+  .form-group { margin-bottom: 1.1rem; }
 
   .form-group label {
     display: block;
@@ -352,17 +421,33 @@
   }
 
   .form-group textarea { resize: vertical; min-height: 100px; }
+
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .nav-search { display: none; }
+    .nav-links  { display: none; }
+    .hamburger  { display: flex; }
+
+    main { padding: 1.25rem 1rem; }
+
+    .events-grid {
+      grid-template-columns: 1fr;
+    }
+
+    footer { padding: 1rem; }
+  }
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <div class="nav-inner">
-    <a href="{{ url_for('home') }}" class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+    <a href="{{ url_for('home') }}" class="nav-brand">
       <img src="{{ url_for('static', filename='images/emu_logo.png') }}" alt="EMU Logo" style="height: 36px; width: auto; object-fit: contain;">
       Campus<span>Hub</span>
     </a>
 
+    <!-- Desktop search -->
     <div class="nav-search">
       <form method="GET" action="{{ url_for('event_list') }}">
         <input type="search" name="search" placeholder="Search events..." value="{{ request.args.get('search', '') }}">
@@ -370,6 +455,7 @@
       </form>
     </div>
 
+    <!-- Desktop links -->
     <div class="nav-links">
       <a href="{{ url_for('home') }}">Home</a>
       <a href="{{ url_for('event_list') }}">Events</a>
@@ -382,6 +468,36 @@
         <a href="{{ url_for('register') }}" class="btn-primary">Sign Up</a>
       {% endif %}
     </div>
+
+    <!-- Hamburger button (mobile only) -->
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <!-- Mobile search -->
+    <form method="GET" action="{{ url_for('event_list') }}">
+      <input type="search" name="search" placeholder="Search events..." value="{{ request.args.get('search', '') }}">
+      <button type="submit">Search</button>
+    </form>
+
+    <div class="divider"></div>
+
+    <a href="{{ url_for('home') }}">🏠 Home</a>
+    <a href="{{ url_for('event_list') }}">📅 Events</a>
+
+    {% if session.user_id %}
+      <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('post_event') }}" class="btn-primary">+ Post Event</a>
+      <a href="{{ url_for('logout') }}">👋 Logout</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">🔑 Login</a>
+      <a href="{{ url_for('register') }}" class="btn-primary">Sign Up</a>
+    {% endif %}
   </div>
 </nav>
 
@@ -404,6 +520,23 @@
 </footer>
 
 <script>
+  // Hamburger toggle
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+  });
+
+  // Close mobile menu when a link is clicked
+  mobileMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('open');
+      mobileMenu.classList.remove('open');
+    });
+  });
+
   // Auto-dismiss flash messages after 3 seconds
   const flashWrap = document.getElementById('flash-wrap');
   if (flashWrap) {
