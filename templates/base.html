@@ -17,9 +17,9 @@
     --border: #E2DDD6;
     --text: #1A1814;
     --muted: #7A7570;
-    --accent: #C84B2F;
-    --accent-light: #FAF0ED;
-    --accent-dark: #9A3320;
+    --accent: #1A6FBF;
+    --accent-light: #E6F1FB;
+    --accent-dark: #0C4A87;
     --nav-height: 68px;
   }
 
@@ -487,15 +487,15 @@
 
     <div class="divider"></div>
 
-    <a href="{{ url_for('home') }}">🏠 Home</a>
+    <a href="{{ url_for('home') }}"> Home</a>
     <a href="{{ url_for('event_list') }}">📅 Events</a>
 
     {% if session.user_id %}
       <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
       <a href="{{ url_for('post_event') }}" class="btn-primary">+ Post Event</a>
-      <a href="{{ url_for('logout') }}">👋 Logout</a>
+      <a href="{{ url_for('logout') }}"> Logout</a>
     {% else %}
-      <a href="{{ url_for('login') }}">🔑 Login</a>
+      <a href="{{ url_for('login') }}"> Login</a>
       <a href="{{ url_for('register') }}" class="btn-primary">Sign Up</a>
     {% endif %}
   </div>
