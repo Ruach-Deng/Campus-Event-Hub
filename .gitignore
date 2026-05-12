@@ -184,3 +184,4 @@ __pycache__/
 .env
 instance/
 *.pyc
+*.db
