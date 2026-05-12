@@ -9,13 +9,32 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import LoginManager, login_required, UserMixin, current_user, login_user, logout_user
 from flask import flash
 from flask import get_flashed_messages
+from dotenv import load_dotenv
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+load_dotenv()
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, 'app.db')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(24)
+
+database_url = os.environ.get("DATABASE_URL")
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace(
+        "postgres://",
+        "postgresql://",
+        1
+    )
+
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    database_url
+    or "sqlite:///" + os.path.join(basedir, 'app.db')
+)
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -318,5 +337,8 @@ def logout():
     return redirect(url_for('home'))
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )
