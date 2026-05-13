@@ -44,9 +44,10 @@ login.login_view = 'login'
 
 # Define the User model
 class User(UserMixin, db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
     events = db.relationship('Event', backref='author', lazy=True)
     rsvps = db.relationship('RSVP', backref='user', lazy=True)
 
@@ -71,13 +72,14 @@ class Event(db.Model):
     description: so.Mapped[str] = so.mapped_column(index=True, default="No Description")
     category: so.Mapped[str] = so.mapped_column(index=True, default="No Category")
     created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
-    user_id: so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id: so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')
 
 
 class RSVP(db.Model):
+    
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
