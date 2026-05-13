@@ -44,11 +44,12 @@ login.login_view = 'login'
 
 # Define the User model
 class User(UserMixin, db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
-    events = db.relationship('Event', backref='author', lazy=True)
-    rsvps = db.relationship('RSVP', backref='user', lazy=True)
+    password = db.Column(db.String(255), nullable=False)
+    events = db.relationship('Event', backref='author', lazy=True, cascade='all, delete-orphan')
+    rsvps = db.relationship('RSVP', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -59,11 +60,12 @@ class User(UserMixin, db.Model):
 
 @login.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return  db.session.get(User, int(user_id))
 
 
 # Define the Event model
 class Event(db.Model):
+    __tablename__ = "events"
     id = db.Column(db.Integer, primary_key=True)
     title: so.Mapped[str] = so.mapped_column(index=True, default="No title")
     date: so.Mapped[datetime] = so.mapped_column(index=True, default=datetime.now)
@@ -76,15 +78,16 @@ class Event(db.Model):
 
 
 class RSVP(db.Model):
+    __tablename__ = "rsvps"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # Initialize the database
-with app.app_context():
-    db.create_all()
+#with app.app_context():
+ #   db.create_all()
 
 
 @app.route("/")
@@ -141,6 +144,7 @@ def event_detail(event_id):
 @app.route('/post-event', methods=['GET', 'POST'])
 @login_required
 def post_event():
+
     if 'user_id' not in session:
         flash('Please login to post an event', 'error')
         return redirect(url_for('login'))
@@ -182,6 +186,7 @@ def post_event():
 
 @app.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
 def edit_event(event_id):
+
     if 'user_id' not in session:
         flash('Please login to edit events', 'error')
         return redirect(url_for('login'))
@@ -208,6 +213,7 @@ def edit_event(event_id):
 
 @app.route('/event/<int:event_id>/delete', methods=['POST'])
 def delete_event(event_id):
+
     if 'user_id' not in session:
         flash('Please login to delete events', 'error')
         return redirect(url_for('login'))
@@ -227,6 +233,7 @@ def delete_event(event_id):
 
 @app.route('/event/<int:event_id>/rsvp', methods=['POST'])
 def rsvp_event(event_id):
+
     if 'user_id' not in session:
         flash('Please login to RSVP', 'error')
         return redirect(url_for('login'))
@@ -268,7 +275,7 @@ def cancel_rsvp(event_id):
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    user = User.query.get(session['user_id'])
+    user = current_user
     user_events = Event.query.filter_by(user_id=user.id).order_by(Event.date).all()
     user_rsvps = RSVP.query.filter_by(user_id=user.id).all()
     total_rsvps = sum(len(e.rsvps) for e in user_events)
@@ -280,6 +287,10 @@ def dashboard():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -288,8 +299,6 @@ def login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
-            session['user_id'] = user.id
-            session['user_email'] = user.email
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
@@ -300,6 +309,7 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -313,28 +323,45 @@ def register():
             return redirect(url_for('register'))
 
         existing_user = User.query.filter_by(email=email).first()
+
         if existing_user:
             flash('Email already registered', 'error')
             return redirect(url_for('register'))
+        
+        try:
 
-        hashed_password = generate_password_hash(password)
-        new_user = User(email=email, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
+            hashed_password = generate_password_hash(password)
+            new_user = User(email=email, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
 
-        flash('Registration successful! Please login.', 'success')
-        return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred during registration', 'error')
+            print(e)
 
     return render_template('register.html')
-
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    session.clear()
+
     flash('Logged out successfully', 'success')
     return redirect(url_for('home'))
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template("500.html"), 500
 
 
 if __name__ == "__main__":
