@@ -75,7 +75,7 @@ class Event(db.Model):
     user_id: so.Mapped[int] = so.mapped_column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')
 
-
+# Define the RSVP model
 class RSVP(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
@@ -88,14 +88,14 @@ class RSVP(db.Model):
 with app.app_context():
     db.create_all()
 
-
+# Home page with upcoming events
 @app.route("/")
 def home():
     upcoming_events = Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).limit(6).all()
     return render_template('home.html', upcoming_events=upcoming_events)
 
 
-# ── Event list with upcoming/past filter ──
+# Event list with upcoming/past filter 
 @app.route('/events', methods=['GET', 'POST'])
 def event_list():
     category = request.args.get('category')
@@ -117,7 +117,7 @@ def event_list():
             )
         )
 
-    # NEW: filter by upcoming or past
+    # filter by upcoming or past
     if tab == 'past':
         query = query.filter(Event.date < datetime.now())
         events = query.order_by(Event.date.desc()).all()
@@ -127,23 +127,23 @@ def event_list():
 
     return render_template('events.html', events=events, category=category, search=search, tab=tab)
 
-
-# ── NEW: Event detail page ──
+# event detail page with RSVP status 
 @app.route('/event/<int:event_id>')
 def event_detail(event_id):
     event = Event.query.get_or_404(event_id)
     user_rsvpd = False
-    if 'user_id' in session:
+
+    if current_user.is_authenticated:
         user_rsvpd = RSVP.query.filter_by(
-            user_id=session['user_id'], event_id=event_id
+            user_id=current_user.id, event_id=event_id
         ).first() is not None
     return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd)
 
-
+# Post event route with ownership check
 @app.route('/post-event', methods=['GET', 'POST'])
 @login_required
 def post_event():
-    if 'user_id' not in session:
+    if not current_user.is_authenticated:
         flash('Please login to post an event', 'error')
         return redirect(url_for('login'))
 
@@ -181,16 +181,17 @@ def post_event():
 
     return render_template('post_event.html')
 
-
+# Edit event route with ownership check
 @app.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
 def edit_event(event_id):
-    if 'user_id' not in session:
+
+    if not current_user.is_authenticated:
         flash('Please login to edit events', 'error')
         return redirect(url_for('login'))
 
     event = Event.query.get_or_404(event_id)
 
-    if event.user_id != session['user_id']:
+    if event.user_id != current_user.id:
         flash('You can only edit your own events', 'error')
         return redirect(url_for('event_list'))
 
@@ -207,16 +208,17 @@ def edit_event(event_id):
 
     return render_template('edit_event.html', event=event)
 
-
+# Delete event route with ownership checkS
 @app.route('/event/<int:event_id>/delete', methods=['POST'])
 def delete_event(event_id):
-    if 'user_id' not in session:
+    
+    if not current_user.is_authenticated:
         flash('Please login to delete events', 'error')
         return redirect(url_for('login'))
 
     event = Event.query.get_or_404(event_id)
 
-    if event.user_id != session['user_id']:
+    if event.user_id != current_user.id:
         flash('You can only delete your own events', 'error')
         return redirect(url_for('event_list'))
 
@@ -226,21 +228,21 @@ def delete_event(event_id):
     flash('Event deleted successfully!', 'success')
     return redirect(url_for('event_list'))
 
-
+# RSVP route
 @app.route('/event/<int:event_id>/rsvp', methods=['POST'])
 def rsvp_event(event_id):
-    if 'user_id' not in session:
+    if not current_user.is_authenticated:
         flash('Please login to RSVP', 'error')
         return redirect(url_for('login'))
 
     event = Event.query.get_or_404(event_id)
 
-    existing_rsvp = RSVP.query.filter_by(user_id=session['user_id'], event_id=event_id).first()
+    existing_rsvp = RSVP.query.filter_by(user_id=current_user.id, event_id=event_id).first()
 
     if existing_rsvp:
         flash('You have already RSVP\'d to this event', 'info')
     else:
-        new_rsvp = RSVP(user_id=session['user_id'], event_id=event_id)
+        new_rsvp = RSVP(user_id=current_user.id, event_id=event_id)
         db.session.add(new_rsvp)
         db.session.commit()
         flash('RSVP successful!', 'success')
@@ -248,14 +250,14 @@ def rsvp_event(event_id):
     return redirect(url_for('event_detail', event_id=event_id))
 
 
-# ── NEW: Cancel RSVP ──
+# Cancel RSVP route
 @app.route('/event/<int:event_id>/cancel-rsvp', methods=['POST'])
 def cancel_rsvp(event_id):
-    if 'user_id' not in session:
+    if not current_user.is_authenticated:
         flash('Please login to cancel RSVP', 'error')
         return redirect(url_for('login'))
 
-    rsvp = RSVP.query.filter_by(user_id=session['user_id'], event_id=event_id).first()
+    rsvp = RSVP.query.filter_by(user_id=current_user.id, event_id=event_id).first()
 
     if rsvp:
         db.session.delete(rsvp)
@@ -266,11 +268,11 @@ def cancel_rsvp(event_id):
 
     return redirect(url_for('event_detail', event_id=event_id))
 
-
+# User dashboard with event and RSVP management
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    user = User.query.get(session['user_id'])
+    user = User.query.get(current_user.id)
     user_events = Event.query.filter_by(user_id=user.id).order_by(Event.date).all()
     user_rsvps = RSVP.query.filter_by(user_id=user.id).all()
     total_rsvps = sum(len(e.rsvps) for e in user_events)
@@ -279,7 +281,7 @@ def dashboard():
         user_events=user_events, user_rsvps=user_rsvps,
         total_rsvps=total_rsvps, upcoming_count=upcoming_count)
 
-
+# Authentication routes
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -290,8 +292,8 @@ def login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
-            session['user_id'] = user.id
-            session['user_email'] = user.email
+           # session['user_id'] = user.id
+           # session['user_email'] = user.email
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
@@ -299,9 +301,10 @@ def login():
 
     return render_template('login.html')
 
-
+# Registration route with validation 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -334,7 +337,6 @@ def register():
 @login_required
 def logout():
     logout_user()
-    session.clear()
     flash('Logged out successfully', 'success')
     return redirect(url_for('home'))
 
