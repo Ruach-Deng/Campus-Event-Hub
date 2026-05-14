@@ -12,6 +12,7 @@ from flask import get_flashed_messages
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
 from email_validator import validate_email, EmailNotValidError
+from datetime import timedelta
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -19,6 +20,13 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv()
 
 app = Flask(__name__)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+REMEMBER_COOKIE_DURATION = timedelta(days=30)
+
 csrf = CSRFProtect(app)
 
 #set secret key from environment variable
@@ -364,9 +372,10 @@ def register():
         new_user = User(email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
+        login_user(new_user, remember=True)
 
         flash('Registration successful! Please login.', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('dashboard'))
 
     return render_template('register.html')
 
