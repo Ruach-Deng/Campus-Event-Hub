@@ -4,13 +4,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import sqlalchemy.orm as so
 import sqlalchemy as sa
-from datetime import datetime, timedelta
+from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import LoginManager, login_required, UserMixin, current_user, login_user, logout_user
 from flask import flash
 from flask import get_flashed_messages
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
+from datetime import timedelta
 from werkzeug.middleware.proxy_fix import ProxyFix
 from email_validator import validate_email, EmailNotValidError
 
@@ -60,7 +61,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
-login.session_protection = "strong"
+login.session_protection = "basic"
 login.login_view = 'login'
 
 
@@ -336,7 +337,7 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            login_user(user, remember=True)
+            login_user(user, remember=True, duration=timedelta(days=7))
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
@@ -383,7 +384,7 @@ def register():
         db.session.commit()
         login_user(new_user, remember=True)
 
-        flash('Registration successful! Please login.', 'success')
+        flash('Registration successful!', 'success')
         return redirect(url_for('dashboard'))
 
     return render_template('register.html')

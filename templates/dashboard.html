@@ -470,9 +470,9 @@
 
     <!-- Profile card -->
     <div class="profile-card">
-      <div class="profile-avatar">{{ session.user_email[0] | upper }}</div>
-      <div class="profile-name">{{ session.user_email.split('@')[0] | title }}</div>
-      <div class="profile-email">{{ session.user_email }}</div>
+      <div class="profile-avatar">{{ current_user.email[0] | upper }}</div>
+      <div class="profile-name">{{ current_user.email.split('@')[0] | title }}</div>
+      <div class="profile-email">{{ current_user.email }}</div>
       <div class="profile-badges">
         <span class="d-tag Student">Student</span>
         {% if user_events and user_events | length >= 3 %}
