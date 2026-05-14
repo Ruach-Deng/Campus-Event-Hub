@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, url_for
 import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -22,7 +22,7 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, 'app.db')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(24)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 database_url = os.environ.get("DATABASE_URL")
 if database_url and database_url.startswith("postgres://"):
@@ -69,6 +69,7 @@ def load_user(user_id):
 
 # Define the Event model
 class Event(db.Model):
+    __tablename__ = "events"
     id = db.Column(db.Integer, primary_key=True)
     title: so.Mapped[str] = so.mapped_column(index=True, default="No title")
     date: so.Mapped[datetime] = so.mapped_column(index=True, default=datetime.now)
@@ -84,13 +85,13 @@ class RSVP(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # Initialize the database
-with app.app_context():
-    db.create_all()
+#with app.app_context():
+ #   db.create_all()
 
 # Home page with upcoming events
 @app.route("/")
@@ -147,10 +148,7 @@ def event_detail(event_id):
 @app.route('/post-event', methods=['GET', 'POST'])
 @login_required
 def post_event():
-    if not current_user.is_authenticated:
-        flash('Please login to post an event', 'error')
-        return redirect(url_for('login'))
-
+   
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         date_str = request.form.get('date', '')
@@ -217,11 +215,8 @@ def post_event():
 
 # Edit event route with ownership check
 @app.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_event(event_id):
-
-    if not current_user.is_authenticated:
-        flash('Please login to edit events', 'error')
-        return redirect(url_for('login'))
 
     event = Event.query.get_or_404(event_id)
 
@@ -242,14 +237,11 @@ def edit_event(event_id):
 
     return render_template('edit_event.html', event=event)
 
-# Delete event route with ownership checkS
+# Delete event route with ownership check
 @app.route('/event/<int:event_id>/delete', methods=['POST'])
+@login_required
 def delete_event(event_id):
     
-    if not current_user.is_authenticated:
-        flash('Please login to delete events', 'error')
-        return redirect(url_for('login'))
-
     event = Event.query.get_or_404(event_id)
 
     if event.user_id != current_user.id:
@@ -264,10 +256,8 @@ def delete_event(event_id):
 
 # RSVP route
 @app.route('/event/<int:event_id>/rsvp', methods=['POST'])
+@login_required
 def rsvp_event(event_id):
-    if not current_user.is_authenticated:
-        flash('Please login to RSVP', 'error')
-        return redirect(url_for('login'))
 
     event = Event.query.get_or_404(event_id)
 
@@ -286,11 +276,9 @@ def rsvp_event(event_id):
 
 # Cancel RSVP route
 @app.route('/event/<int:event_id>/cancel-rsvp', methods=['POST'])
+@login_required
 def cancel_rsvp(event_id):
-    if not current_user.is_authenticated:
-        flash('Please login to cancel RSVP', 'error')
-        return redirect(url_for('login'))
-
+   
     rsvp = RSVP.query.filter_by(user_id=current_user.id, event_id=event_id).first()
 
     if rsvp:
@@ -318,16 +306,15 @@ def dashboard():
 # Authentication routes
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
 
         user = User.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-           # session['user_id'] = user.id
-           # session['user_email'] = user.email
+        if user and user.check_password(password):
+            login_user(user, remember=True)
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
