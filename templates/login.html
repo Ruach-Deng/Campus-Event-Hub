@@ -14,6 +14,9 @@
 
     <!-- Form -->
     <form method="POST" action="{{ url_for('login') }}">
+      
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="form-group">
         <label>Email</label>
         <input type="email" name="email" placeholder="you@emu.edu" autocomplete="email" required>

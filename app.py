@@ -10,6 +10,8 @@ from flask_login import LoginManager, login_required, UserMixin, current_user, l
 from flask import flash
 from flask import get_flashed_messages
 from dotenv import load_dotenv
+from flask_wtf.csrf import CSRFProtect
+from email_validator import validate_email, EmailNotValidError
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -17,6 +19,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv()
 
 app = Flask(__name__)
+csrf = CSRFProtect(app)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, 'app.db')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(24)
 
@@ -148,22 +152,52 @@ def post_event():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        title = request.form.get('title')
-        date_str = request.form.get('date')
-        location = request.form.get('location')
-        description = request.form.get('description')
-        category = request.form.get('category')
+        title = request.form.get('title', '').strip()
+        date_str = request.form.get('date', '')
+        location = request.form.get('location', '').strip()
+        description = request.form.get('description', '').strip()
+        category = request.form.get('category', '').strip()
 
+        # check for empty fields
         if not all([title, date_str, location, description, category]):
             flash('All fields are required', 'error')
             return redirect(url_for('post_event'))
-
+        
+        # convert date
         try:
             event_date = datetime.fromisoformat(date_str)
         except ValueError:
             flash('Invalid date format', 'error')
             return redirect(url_for('post_event'))
+        
+        # Title validation
+        #if len(title) < 3:
+         #   flash("Title too short", "error")
+          #  return redirect(url_for('post_event'))
+        
+        # Location validation
+        if len(location) < 2:
+            flash("Location too short", "error")
+            return redirect(url_for('post_event'))
+        
+        # Allowed categories
+        allowed_categories = ["Social","Academics","Sports","Club","Workshop"]
 
+        if category not in allowed_categories:
+            flash("Invalid category", "error")
+            return redirect(url_for('post_event'))
+        
+        # Prevent past dates
+        if event_date < datetime.now():
+            flash("Event date cannot be in the past", "error")
+            return redirect(url_for('post_event'))
+        
+         # Description limit
+        if len(description) > 1000:
+            flash("Description too long", "error")
+            return redirect(url_for('post_event'))
+        
+        #create event
         new_event = Event(
             title=title,
             date=event_date,
@@ -306,22 +340,34 @@ def login():
 def register():
 
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
 
+        # check empty fields
         if not email or not password:
             flash('Email and password are required', 'error')
             return redirect(url_for('register'))
-
+        
+        # validate email format
+        try:
+            valid = validate_email(email)
+            email = valid.email
+        except EmailNotValidError:
+            flash('Invalid email format', 'error')
+            return redirect(url_for('register'))
+        
+        # check password length
         if len(password) < 6:
             flash('Password must be at least 6 characters', 'error')
             return redirect(url_for('register'))
-
+        
+        # check if email already exists
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email already registered', 'error')
             return redirect(url_for('register'))
-
+        
+        # create new user
         hashed_password = generate_password_hash(password)
         new_user = User(email=email, password=hashed_password)
         db.session.add(new_user)
@@ -340,6 +386,15 @@ def logout():
     flash('Logged out successfully', 'success')
     return redirect(url_for('home'))
 
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template("500.html"), 500
 
 if __name__ == "__main__":
     app.run(

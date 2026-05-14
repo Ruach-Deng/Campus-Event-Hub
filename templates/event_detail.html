@@ -54,6 +54,7 @@
     <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
       <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-outline">✏️ Edit Event</a>
       <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Delete this event?');" style="margin: 0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.2rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; background: #FCECEA; color: #9A2B1E; border: 1px solid #F5C0BB; transition: all 0.2s;">
           🗑 Delete Event
         </button>
@@ -76,6 +77,7 @@
             <span style="font-size: 14px; font-weight: 500; color: #1E6B33;">You're going!</span>
           </div>
           <form method="POST" action="{{ url_for('cancel_rsvp', event_id=event.id) }}" style="margin: 0;" id="cancel-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-outline" style="width: 100%; justify-content: center;" id="cancel-btn" onclick="handleCancel(event)">
               Cancel RSVP
             </button>
@@ -86,6 +88,7 @@
             Join <span id="rsvp-join-count">{{ event.rsvps|length }}</span> other{{ 's' if event.rsvps|length != 1 }} attending this event.
           </p>
           <form method="POST" action="{{ url_for('rsvp_event', event_id=event.id) }}" style="margin: 0;" id="rsvp-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-accent" style="width: 100%; justify-content: center; padding: 0.7rem; transition: all 0.2s;" id="rsvp-btn" onclick="handleRSVP(event)">
               RSVP to this event
             </button>
