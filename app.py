@@ -21,21 +21,21 @@ load_dotenv()
 app = Flask(__name__)
 csrf = CSRFProtect(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, 'app.db')
+#set secret key from environment variable
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
+# configure database URL for Heroku Postgres
 database_url = os.environ.get("DATABASE_URL")
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace(
-        "postgres://",
-        "postgresql://",
-        1
-    )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    database_url
-    or "sqlite:///" + os.path.join(basedir, 'app.db')
-)
+if database_url:
+    # Railway provides DATABASE_URL with postgres:// prefix
+    # SQLAlchemy requires postgresql:// prefix
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+else:
+    # Fallback to SQLite for local development
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, 'app.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
