@@ -82,7 +82,7 @@ class Event(db.Model):
 
 # Define the RSVP model
 class RSVP(db.Model):
-    
+    __tablename__ = "rsvps"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
@@ -90,8 +90,8 @@ class RSVP(db.Model):
 
 
 # Initialize the database
-#with app.app_context():
- #   db.create_all()
+with app.app_context():
+    db.create_all()
 
 # Home page with upcoming events
 @app.route("/")
@@ -142,7 +142,12 @@ def event_detail(event_id):
         user_rsvpd = RSVP.query.filter_by(
             user_id=current_user.id, event_id=event_id
         ).first() is not None
-    return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd)
+
+    # Pass user email for avatar
+    user_email = current_user.email if current_user.is_authenticated else ""
+    
+    return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd, session=request.environ)
+
 
 # Post event route with ownership check
 @app.route('/post-event', methods=['GET', 'POST'])
@@ -179,7 +184,7 @@ def post_event():
             return redirect(url_for('post_event'))
         
         # Allowed categories
-        allowed_categories = ["Social","Academics","Sports","Club","Workshop"]
+        allowed_categories = ["Social","Academics","Sports","Clubs","Workshop"]
 
         if category not in allowed_categories:
             flash("Invalid category", "error")
