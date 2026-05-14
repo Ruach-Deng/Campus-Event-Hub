@@ -4,14 +4,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import sqlalchemy.orm as so
 import sqlalchemy as sa
-from datetime import datetime
+from datetime import datetime,timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import LoginManager, login_required, UserMixin, current_user, login_user, logout_user
 from flask import flash
 from flask import get_flashed_messages
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
-from datetime import timedelta
 from werkzeug.middleware.proxy_fix import ProxyFix
 from email_validator import validate_email, EmailNotValidError
 
@@ -24,7 +23,6 @@ csrf = CSRFProtect(app)
 
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
 app.config['SESSION_COOKIE_SECURE'] = True
@@ -161,9 +159,6 @@ def event_detail(event_id):
             user_id=current_user.id, event_id=event_id
         ).first() is not None
 
-    # Pass user email for avatar
-    user_email = current_user.email if current_user.is_authenticated else ""
-    
     return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd )
 
 
@@ -284,6 +279,11 @@ def rsvp_event(event_id):
 
     event = Event.query.get_or_404(event_id)
 
+     # Don't allow RSVP to past events
+    if event.date < datetime.now():
+        flash('Cannot RSVP to past events', 'error')
+        return redirect(url_for('event_detail', event_id=event_id))
+
     existing_rsvp = RSVP.query.filter_by(user_id=current_user.id, event_id=event_id).first()
 
     if existing_rsvp:
@@ -330,6 +330,10 @@ def dashboard():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
+    #Redirect if already logged in
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
@@ -348,6 +352,10 @@ def login():
 # Registration route with validation 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+
+     # Redirect if already logged in
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
