@@ -4,33 +4,42 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import sqlalchemy.orm as so
 import sqlalchemy as sa
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import LoginManager, login_required, UserMixin, current_user, login_user, logout_user
 from flask import flash
 from flask import get_flashed_messages
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
 from email_validator import validate_email, EmailNotValidError
-from datetime import timedelta
-
-
-basedir = os.path.abspath(os.path.dirname(__file__))
 
 load_dotenv()
 
 app = Flask(__name__)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-
-app.config['SESSION_COOKIE_SECURE'] = True
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-REMEMBER_COOKIE_DURATION = timedelta(days=30)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 csrf = CSRFProtect(app)
 
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = "Lax"
+
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
+app.config['REMEMBER_COOKIE_SECURE'] = True
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+app.config['REMEMBER_COOKIE_SAMESITE'] = "Lax"
+
+
 #set secret key from environment variable
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 # configure database URL for Heroku Postgres
 database_url = os.environ.get("DATABASE_URL")
@@ -51,6 +60,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
+login.session_protection = "strong"
 login.login_view = 'login'
 
 
@@ -72,8 +82,7 @@ class User(UserMixin, db.Model):
 
 @login.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
-
+    return db.session.get(User, int(user_id))
 
 # Define the Event model
 class Event(db.Model):
@@ -154,7 +163,7 @@ def event_detail(event_id):
     # Pass user email for avatar
     user_email = current_user.email if current_user.is_authenticated else ""
     
-    return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd, session=request.environ)
+    return render_template('event_detail.html', event=event, user_rsvpd=user_rsvpd )
 
 
 # Post event route with ownership check
