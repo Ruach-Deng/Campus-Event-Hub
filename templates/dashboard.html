@@ -353,7 +353,7 @@
 <div class="dash-hero">
   <div class="dash-greeting">
     <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #C84B2F; margin-bottom: 0.4rem;">👋 Welcome back</div>
-    <h2>{{ session.user_email.split('@')[0] | title }}'s Dashboard</h2>
+    <h2>{{ current_user.email.split('@')[0] | title }}'s Dashboard</h2>
     <p class="subtitle">Here's what's happening on campus.</p>
   </div>
   <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
