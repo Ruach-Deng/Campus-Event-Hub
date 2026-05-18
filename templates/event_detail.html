@@ -50,7 +50,8 @@
     </div>
 
     <!-- Owner actions -->
-    {% if session.user_id == event.user_id %}
+
+    {% if current_user.is_authenticated and current_user.id == event.user_id %}
     <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
       <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-outline">✏️ Edit Event</a>
       <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Delete this event?');" style="margin: 0;">
@@ -69,7 +70,7 @@
 
       <div style="font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 600; color: #1A1814; margin-bottom: 1rem;">Your RSVP</div>
 
-      {% if session.user_id %}
+      {% if current_user.id %}
         {% if user_rsvpd %}
           <!-- Already RSVP'd -->
           <div id="rsvp-status" style="display: flex; align-items: center; gap: 0.5rem; background: #EBF7EE; border: 1px solid #B6DFC1; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem;">
