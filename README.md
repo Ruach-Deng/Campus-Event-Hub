@@ -1,4 +1,4 @@
-# 🎓 Campus Event Hub
+# Campus Event Hub
 
 Campus Event Hub is a full-stack web application built by a student group
 as part of a web development capstone project. The goal was to create a
@@ -11,11 +11,11 @@ with a SQLite database managed through Flask-SQLAlchemy and HTML
 templates powered by Jinja2. The front end uses Pico CSS as a base
 with custom styling on top.
 
-## 🚀 Live Demo
+##  Live Demo
 
 > Currently runs locally — deployment coming in second release candidate.
 
-## ✅ Features in first release candidate
+##  Features in first release candidate
 
 - User registration and login (session-based authentication)
 - Post, edit, and delete campus events
@@ -65,7 +65,7 @@ flask run
 
 Then open your browser and go to: **http://127.0.0.1:5000**
 
-## 📦 Dependencies (requirements.txt)
+##  Dependencies (requirements.txt)
 
 Make sure this file exists in your project root:
 ```
@@ -104,7 +104,7 @@ pip freeze > requirements.txt
 - Use the **search bar** in the header to find events by keyword
 - Use the **category links** on the homepage or events page to filter by type
 
-## 📁 Project Structure
+## Project Structure
 ```
 campus-event-hub/
 ├── app.py                  # Main Flask application and routes
@@ -126,7 +126,7 @@ campus-event-hub/
 
 ---
 
-## 🔮 Coming in second release candidate
+## Coming in second release candidate
 
 - Email notifications for RSVPs
 - Password reset via email
@@ -135,13 +135,13 @@ campus-event-hub/
 - Admin moderation panel
 - Deployment to Railway (live public URL)
 
-## ⚠️ Known Limitations in first release candidate
+##  Known Limitations in first release candidate
 
 - No email functionality yet
 - No password reset
 - Runs locally only (not yet deployed)
 - Images must be added manually to static/images/
 
-## 📬 Contact
+## Contact
 
-For questions about this project, contact: [ruach.deng@emu.edu]
+For questions about this project, contact: [ruachdhieu@gmail.com]
