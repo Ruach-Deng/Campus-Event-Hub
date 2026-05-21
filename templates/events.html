@@ -34,11 +34,11 @@
 <!-- Category filter pills -->
 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
   <a href="{{ url_for('event_list', tab=tab) }}" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; border-radius: 100px; font-size: 13px; font-weight: 500; text-decoration: none; border: 1px solid {% if not category %}#C84B2F{% else %}#E2DDD6{% endif %}; background: {% if not category %}#FAF0ED{% else %}#FFFFFF{% endif %}; color: {% if not category %}#C84B2F{% else %}#7A7570{% endif %};">All</a>
-  {% for cat, icon in [('Academics'),('Sports'),('Social'),('Clubs'),('Workshop')] %}
+  {% for cat, icon in [('Academics',''),('Sports',''),('Social',''),('Clubs',''),('Workshop','')] %}
     <a href="{{ url_for('event_list', category=cat, tab=tab) }}" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 1rem; border-radius: 100px; font-size: 13px; font-weight: 500; text-decoration: none; border: 1px solid {% if category == cat %}#C84B2F{% else %}#E2DDD6{% endif %}; background: {% if category == cat %}#FAF0ED{% else %}#FFFFFF{% endif %}; color: {% if category == cat %}#C84B2F{% else %}#7A7570{% endif %};">
       {{ icon }} {{ cat }}
     </a>
-  {% endfor %}
+  {% endfor %}s
 </div>
 
 <!-- Events grid -->
