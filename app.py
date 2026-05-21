@@ -26,18 +26,18 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
-app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('DATABASE_URL') is not None
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = "Lax"
 
 app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
-app.config['REMEMBER_COOKIE_SECURE'] = True
+app.config['REMEMBER_COOKIE_SECURE'] = os.environ.get('DATABASE_URL') is not None
 app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 app.config['REMEMBER_COOKIE_SAMESITE'] = "Lax"
 
 
 #set secret key from environment variable
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
