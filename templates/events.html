@@ -34,7 +34,7 @@
 <!-- Category filter pills -->
 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
   <a href="{{ url_for('event_list', tab=tab) }}" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; border-radius: 100px; font-size: 13px; font-weight: 500; text-decoration: none; border: 1px solid {% if not category %}#C84B2F{% else %}#E2DDD6{% endif %}; background: {% if not category %}#FAF0ED{% else %}#FFFFFF{% endif %}; color: {% if not category %}#C84B2F{% else %}#7A7570{% endif %};">All</a>
-  {% for cat, icon in [('Academics','📚'),('Sports','⚽'),('Social','🎉'),('Clubs','🏛️'),('Workshop','🛠️')] %}
+  {% for cat, icon in [('Academics'),('Sports'),('Social'),('Clubs'),('Workshop')] %}
     <a href="{{ url_for('event_list', category=cat, tab=tab) }}" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 1rem; border-radius: 100px; font-size: 13px; font-weight: 500; text-decoration: none; border: 1px solid {% if category == cat %}#C84B2F{% else %}#E2DDD6{% endif %}; background: {% if category == cat %}#FAF0ED{% else %}#FFFFFF{% endif %}; color: {% if category == cat %}#C84B2F{% else %}#7A7570{% endif %};">
       {{ icon }} {{ cat }}
     </a>
@@ -55,9 +55,9 @@
         <h3>{{ event.title }}</h3>
 
         <div class="meta">
-          <span>📅 {{ event.date.strftime('%b %d, %Y · %I:%M %p') }}</span>
-          <span>📍 {{ event.location }}</span>
-          <span>👤 {{ event.author.email.split('@')[0] }}</span>
+          <span>{{ event.date.strftime('%b %d, %Y · %I:%M %p') }}</span>
+          <span>{{ event.location }}</span>
+          <span>{{ event.author.email.split('@')[0] }}</span>
         </div>
 
         <p class="desc">{{ event.description[:120] }}{% if event.description|length > 120 %}…{% endif %}</p>
@@ -72,7 +72,7 @@
   </div>
 {% else %}
   <div style="text-align: center; padding: 5rem 2rem; background: #FFFFFF; border: 1px dashed #E2DDD6; border-radius: 16px;">
-    <p style="font-size: 2rem; margin-bottom: 0.75rem;">{% if tab == 'past' %}📂{% else %}🔍{% endif %}</p>
+    <p style="font-size: 2rem; margin-bottom: 0.75rem;">{% if tab == 'past' %}{% else %}{% endif %}</p>
     <p style="color: #7A7570; margin-bottom: 1rem;">{% if tab == 'past' %}No past events found.{% else %}No upcoming events found.{% endif %}</p>
     {% if tab == 'upcoming' %}
       <a href="{{ url_for('post_event') }}" class="btn btn-accent">Post the first one</a>

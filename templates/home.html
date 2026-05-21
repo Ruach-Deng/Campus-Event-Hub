@@ -6,7 +6,7 @@
 <section style="padding: 3.5rem 0 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
   <div style="max-width: 520px;">
     <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 100px; margin-bottom: 1.2rem; letter-spacing: 0.05em; text-transform: uppercase;">
-      🎓 EMU Campus
+       EMU Campus
     </div>
     <h1 style="font-family: 'Fraunces', serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 1rem;">
       Discover what's<br><em style="color: var(--accent); font-style: italic;">happening</em> on campus
@@ -29,19 +29,19 @@
     <div class="slide" style="display:block; position: relative;">
       <img src="{{ url_for('static', filename='images/soccer.jpg') }}" style="width:100%; height: 260px; object-fit: cover; display: block;">
       <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); padding: 1.5rem 1.25rem 1rem;">
-        <span style="color: white; font-size: 14px; font-weight: 500;">⚽ Soccer Event</span>
+        <span style="color: white; font-size: 14px; font-weight: 500;"> Soccer Event</span>
       </div>
     </div>
     <div class="slide" style="display:none; position: relative;">
       <img src="{{ url_for('static', filename='images/foodfest.jpg') }}" style="width:100%; height: 260px; object-fit: cover; display: block;">
       <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); padding: 1.5rem 1.25rem 1rem;">
-        <span style="color: white; font-size: 14px; font-weight: 500;">🍜 Food Festival</span>
+        <span style="color: white; font-size: 14px; font-weight: 500;">Food Festival</span>
       </div>
     </div>
     <div class="slide" style="display:none; position: relative;">
       <img src="{{ url_for('static', filename='images/pickleball.jpg') }}" style="width:100%; height: 260px; object-fit: cover; display: block;">
       <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); padding: 1.5rem 1.25rem 1rem;">
-        <span style="color: white; font-size: 14px; font-weight: 500;">🏓 Pickleball</span>
+        <span style="color: white; font-size: 14px; font-weight: 500;">Pickleball</span>
       </div>
     </div>
     <!-- Dots -->
@@ -57,7 +57,7 @@
 <section style="margin-bottom: 3rem;">
   <h2 style="font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; letter-spacing: -0.01em;">Browse by category</h2>
   <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-    {% set cats = [('Academics', '📚'), ('Sports', '⚽'), ('Social', '🎉'), ('Clubs', '🏛️'), ('Workshop', '🛠️')] %}
+    {% set cats = [('Academics'), ('Sports'), ('Social'), ('Clubs'), ('Workshop')] %}
     {% for cat, icon in cats %}
       <a href="{{ url_for('event_list', category=cat) }}" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; font-size: 14px; font-weight: 500; color: var(--text); text-decoration: none; transition: all 0.2s;">
         {{ icon }} {{ cat }}
@@ -81,8 +81,8 @@
             <span class="tag {{ event.category }}">{{ event.category }}</span>
             <h3>{{ event.title }}</h3>
             <div class="meta">
-              <span>📅 {{ event.date.strftime('%b %d, %Y · %I:%M %p') }}</span>
-              <span>📍 {{ event.location }}</span>
+              <span> {{ event.date.strftime('%b %d, %Y · %I:%M %p') }}</span>
+              <span> {{ event.location }}</span>
             </div>
             <p class="desc">{{ event.description[:110] }}{% if event.description|length > 110 %}…{% endif %}</p>
             <div class="card-footer">

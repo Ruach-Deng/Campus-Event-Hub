@@ -352,9 +352,9 @@
 <!-- Hero -->
 <div class="dash-hero">
   <div class="dash-greeting">
-    <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #C84B2F; margin-bottom: 0.4rem;">👋 Welcome back</div>
+    <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #C84B2F; margin-bottom: 0.4rem;"> Welcome back</div>
     <h2>{{ current_user.email.split('@')[0] | title }}'s Dashboard</h2>
-    <p class="subtitle">Here's what's happening on campus.</p>
+    <p class="subtitle">Manage your events, RSVPs, and more</p>
   </div>
   <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
     <a href="{{ url_for('post_event') }}" class="btn btn-accent">+ Post Event</a>
@@ -365,22 +365,22 @@
 <!-- Stats -->
 <div class="dash-stats">
   <div class="stat-card">
-    <div class="stat-icon">📅</div>
+    <div class="stat-icon"></div>
     <div class="stat-value">{{ user_events | length if user_events else 0 }}</div>
     <div class="stat-label">Events Posted</div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon">✅</div>
+    <div class="stat-icon"></div>
     <div class="stat-value">{{ user_rsvps | length if user_rsvps else 0 }}</div>
     <div class="stat-label">RSVPs Made</div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon">🎉</div>
+    <div class="stat-icon"></div>
     <div class="stat-value">{{ total_rsvps if total_rsvps else 0 }}</div>
     <div class="stat-label">RSVPs Received</div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon">🏆</div>
+    <div class="stat-icon"></div>
     <div class="stat-value">{{ upcoming_count if upcoming_count else 0 }}</div>
     <div class="stat-label">Upcoming Campus Events</div>
   </div>
@@ -426,7 +426,7 @@
         {% endfor %}
       {% else %}
         <div class="empty-state">
-          <div class="empty-icon">📭</div>
+          <div class="empty-icon"></div>
           <p>You haven't posted any events yet.</p>
           <a href="{{ url_for('post_event') }}" class="btn btn-accent">Post Your First Event</a>
         </div>
@@ -457,7 +457,7 @@
         {% endfor %}
       {% else %}
         <div class="empty-state">
-          <div class="empty-icon">🗓️</div>
+          <div class="empty-icon"></div>
           <p>You haven't RSVP'd to any events yet.</p>
           <a href="{{ url_for('event_list') }}" class="btn btn-accent">Browse Events</a>
         </div>
@@ -488,7 +488,7 @@
     <!-- Coming up -->
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">⚡ Coming Up</div>
+        <div class="panel-title">Coming Up</div>
         <a href="{{ url_for('event_list') }}" class="panel-link">View all</a>
       </div>
       {% if user_rsvps %}
@@ -511,12 +511,12 @@
     <!-- Activity feed -->
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">🔔 Recent Activity</div>
+        <div class="panel-title"> Recent Activity</div>
       </div>
       {% if user_events %}
         {% for event in user_events[:3] %}
         <div class="activity-item">
-          <div class="activity-icon">📅</div>
+          <div class="activity-icon"></div>
           <div>
             <div class="activity-text">You posted <strong>{{ event.title }}</strong></div>
             <div class="activity-time">{{ event.created_at.strftime('%b %d, %Y') }} · {{ event.rsvps | length }} RSVP{{ 's' if event.rsvps | length != 1 }}</div>
@@ -527,7 +527,7 @@
       {% if user_rsvps %}
         {% for rsvp in user_rsvps[:2] %}
         <div class="activity-item">
-          <div class="activity-icon" style="background: #EBF7EE;">✅</div>
+          <div class="activity-icon" style="background: #EBF7EE;"></div>
           <div>
             <div class="activity-text">You RSVP'd to <strong>{{ rsvp.event.title }}</strong></div>
             <div class="activity-time">{{ rsvp.event.date.strftime('%b %d, %Y') }}</div>
