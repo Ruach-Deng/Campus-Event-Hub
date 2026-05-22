@@ -248,18 +248,6 @@ Some features planned for future updates include:
 
 ---
 
-## Screenshots
-
-You can add screenshots here for:
-
-* Homepage
-* Dashboard
-* Events page
-* RSVP functionality
-* User dashboard
-
----
-
 ## Author
 
 Developed by Ruach Deng
