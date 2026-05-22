@@ -1,147 +1,230 @@
 # Campus Event Hub
+Campus Event Hub is a full-stack web application designed to help EMU students discover, organize, and engage with campus activities in one centralized platform. Students can create events, RSVP to upcoming activities, manage their personal schedules, and stay connected with their campus community through a responsive interface.
 
-Campus Event Hub is a full-stack web application built by a student group
-as part of a web development capstone project. The goal was to create a
-centralised platform where university students can discover what is
-happening on campus, share their own events with the community, and
-keep track of the activities they plan to attend.
+The platform was developed using the Flask framework with a PostgreSQL database deployed on Railway for production hosting. It combines secure user authentication, dynamic event management, and a clean modern UI to deliver a complete campus event experience.
 
-The application is built entirely in Python using the Flask framework,
-with a SQLite database managed through Flask-SQLAlchemy and HTML
-templates powered by Jinja2. The front end uses Pico CSS as a base
-with custom styling on top.
+# Production Deployment
+ Hosted on Railway
+ PostgreSQL database integration enabled
+ 
+# Live URL: 
+https://campus-event-hub.up.railway.app/
 
-##  Live Demo
+# Features
+# User Authentication
+  Secure user registration and login
+  Password hashing using Werkzeug security
+  Session-based authentication with Flask-Login
+  CSRF protection with Flask-WTF
 
-> Currently runs locally — deployment coming in second release candidate.
+# Event Management
+   Create new campus events
+   Edit and delete personal events
+   Event ownership protection
+   Event categorization system
 
-##  Features in first release candidate
+# RSVP System
+   RSVP to upcoming events
+   Cancel RSVPs anytime
+   Live attendee counts
+   Personalized RSVP tracking
+   
+# Search & Filtering
+ Search events by:
+    Title
+    Description
+    Location
+ Filter events by category
+ Separate Upcoming and Past event tabs
 
-- User registration and login (session-based authentication)
-- Post, edit, and delete campus events
-- Browse all events with search and category filtering
-- RSVP to events with live attendee count
-- Personal user dashboard (stats, your events, your RSVPs, activity feed)
-- Five event categories: Academics, Sports, Social, Clubs, Workshops
+# User Dashboard
+  Personal event statistics
+  RSVP activity tracking
+  Upcoming event overview
+  Recent activity feed
+  Organizer insights
+  
+# Responsive UI
+  Modern responsive design
+  Jinja2 templating
+  Custom styling with Pico CSS
+  Interactive homepage slideshow
 
-## 🛠️ Installation & Setup
+# Tech Stack
+# Backend
+  Python
+  Flask
+  Flask-SQLAlchemy
+  Flask-Migrate
+  Flask-Login
+  Flask-WTF
+  
+# Database
+  PostgreSQL (Production)
+  SQLite (Local Development)
+  
+# Frontend
+  HTML5
+  Pico CSS
+  Jinja2 Templates
+  JavaScript
 
-### Requirements
+# Deployment & Hosting
+  Railway
+  PostgreSQL on Railway
+  Gunicorn
+  
+# Application Highlights
+# Dynamic Event Dashboard
+The dashboard provides users with:
+  Event analytics
+  RSVP tracking
+  Personal activity feed
+  Upcoming event reminders
+  Event management controls
 
-- Python 3.9 or higher
-- pip
+# Event Discovery System
+Students can:
+  Browse all campus events
+  Search by keywords
+  Filter by categories
+  View upcoming and past events
 
-### 1. Clone the repository
-```bash
+# Secure Production Configuration
+The application includes:
+  Environment variable management
+  Secure session cookies
+  CSRF protection
+  Proxy handling for Railway deployment
+  PostgreSQL production configuration
+  
+# Installation & Local Setup
+# Prerequisites
+  Python 3.9+
+  Git 
+  
+# 1. Clone the Repository
+bash
 git clone https://github.com/Ruach-Deng/Campus-Event-Hub.git
-cd campus-event-hub
-```
-### 2. Create a virtual environment
-```bash
+cd Campus-Event-Hub
+
+# 2. Create a Virtual Environment
+# Windows
+ bash
 python -m venv venv
-
-# On Mac/Linux:
-source venv/bin/activate
-
-# On Windows:
 venv\Scripts\activate
 
-### 3. Install dependencies
-```bash
+# Mac/Linux
+bash
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Install Dependencies
+bash
 pip install -r requirements.txt
 
-### 4. Set up the database
-```bash
+# 4. Configure Environment Variables
+Create a `.env` file in the project root:
+env
+SECRET_KEY=your_secret_key_here
+DATABASE_URL=your_postgresql_database_url
+
+# 5. Initialize the Database
 python
->>> from app import db
->>> db.create_all()
->>> exit()
-```
+from app import db
+db.create_all()
+exit()
 
-### 5. Run the app
-```bash
+# 6. Run the Application
+bash
 flask run
-```
 
-Then open your browser and go to: **http://127.0.0.1:5000**
+Open your browser and visit:
+http://127.0.0.1:5000
 
-##  Dependencies (requirements.txt)
+# Railway Deployment
+This project is fully deployed on Railway using PostgreSQL.
 
-Make sure this file exists in your project root:
-```
-Flask
-Flask-SQLAlchemy
-Werkzeug
-```
+# Deployment Features
+  Automatic deployments from GitHub
+  Managed PostgreSQL database
+  Environment variable configuration
+  HTTPS enabled
+  Production-ready Flask configuration
 
-Generate it automatically by running:
-```bash
-pip freeze > requirements.txt
-```
+# Production Environment Variables
+env
+SECRET_KEY=your_secret_key
+DATABASE_URL=your_railway_postgresql_url
 
-## 👤 How to Use
+# Project Structure
 
-### Register & Log In
-1. Click **Register** in the top navigation
-2. Enter your email and a password
-3. You will be redirected to the homepage — you are now logged in
-
-### Post an Event
-1. Click **Post Event** in the navigation bar
-2. Fill in the title, date, location, category, and description
-3. Click **Post Event** — your event will appear on the events page immediately
-
-### RSVP to an Event
-1. Browse events on the **All Events** page or homepage
-2. Click the **RSVP** button on any event card
-3. Your RSVP is saved and the attendee count updates
-
-### View Your Dashboard
-1. Click **Dashboard** in the navigation (you must be logged in)
-2. See your stats, events you posted, events you are attending, and recent activity
-
-### Search & Filter
-- Use the **search bar** in the header to find events by keyword
-- Use the **category links** on the homepage or events page to filter by type
-
-## Project Structure
-```
-campus-event-hub/
-├── app.py                  # Main Flask application and routes
-├── requirements.txt        # Python dependencies
-├── README.md               # This file
+Campus-Event-Hub/
+│
+├── app.py
+├── requirements.txt
+├── README.md
+├── Procfile
+├── runtime.txt
+├── .env
+│
 ├── static/
-│   ├── main.css            # Custom styles
-│   └── images/             # Slideshow images
-└── templates/
-    ├── base.html           # Shared layout
-    ├── home.html           # Homepage
-    ├── events.html         # All events listing
-    ├── post_event.html     # Post a new event
-    ├── edit_event.html     # Edit an existing event
-    ├── login.html          # Login page
-    ├── register.html       # Registration page
-    └── dashboard.html      # User dashboard
-```
+│   ├── main.css
+│   └── images/
+│
+├── templates/
+│   ├── base.html
+│   ├── home.html
+│   ├── events.html
+│   ├── event_detail.html
+│   ├── post_event.html
+│   ├── edit_event.html
+│   ├── dashboard.html
+│   ├── login.html
+│   ├── register.html
+│   ├── 404.html
+│   └── 500.html
+│
+└── migrations/
 
----
+# Event Categories
+The platform currently supports:
+  Academics
+  Sports
+  Social
+  Clubs
+  Workshop 
+  
+# Security Features
+  Password hashing
+  CSRF protection
+  Secure session cookies
+  Input validation
+  Ownership authorization checks
+  Protected authenticated routes
+  
+# Future Improvements
 
-## Coming in second release candidate
+# Planned Features
+  Email notifications
+  Password reset system
+  User profile customization
+  Event image uploads
+  Event capacity limits
+  Admin moderation dashboard
+  Real-time notifications
+  Comment system
+  Mobile app support 
+  
+# Known Limitations
+  No email notification system yet
+  No image upload support
+  No admin moderation panel
+  Limited profile customization
 
-- Email notifications for RSVPs
-- Password reset via email
-- Event capacity limits
-- User profile pages
-- Admin moderation panel
-- Deployment to Railway (live public URL)
+# Author
+Developed by Ruach Deng 
 
-##  Known Limitations in first release candidate
-
-- No email functionality yet
-- No password reset
-- Runs locally only (not yet deployed)
-- Images must be added manually to static/images/
-
-## Contact
-
-For questions about this project, contact: [ruachdhieu@gmail.com]
+# Contact
+For questions, feedback, or collaboration opportunities:
+Email: ruachdhieu@gmail.com
